@@ -12,6 +12,9 @@
 #
 # Identity.
 #
+global:
+  ingress:
+    className: openshift-default
 
 # omit the values below if identity.enabled is false
 identity:
