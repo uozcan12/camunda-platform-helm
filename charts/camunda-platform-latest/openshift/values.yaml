@@ -95,6 +95,8 @@ operate:
   containerSecurityContext:
     runAsUser: null
   env:
+    - name: CAMUNDA_OPERATE_ZEEBE_BROKERCONTACTPOINT
+      value: camunda-zeebe-gateway.camunda-combined.svc.cluster.local:26500
     - name: CAMUNDA_OPERATE_ZEEBE_SECURE
       value: "true"
     - name: CAMUNDA_OPERATE_ZEEBE_CERTIFICATEPATH
@@ -135,6 +137,8 @@ tasklist:
   containerSecurityContext:
     runAsUser: null
   env:
+    - name: CAMUNDA_TASKLIST_ZEEBE_BROKERCONTACTPOINT
+      value: camunda-zeebe-gateway.camunda-combined.svc.cluster.local:26500
     - name: CAMUNDA_TASKLIST_ZEEBE_SECURE
       value: "true"
     - name: CAMUNDA_TASKLIST_ZEEBE_CERTIFICATEPATH
