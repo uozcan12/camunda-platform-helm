@@ -85,7 +85,7 @@ connectors:
   contextPath: "/connectors"
   env:
     - name: ZEEBE_CLIENT_BROKER_GATEWAY-ADDRESS
-      value: "camunda-zeebe-gateway.camunda-combined.svc.cluster.local:26500"
+      value: "camunda-zeebe-gateway.test-ns.svc.cluster.local:26500"
     - name: ZEEBE_CLIENT_SECURITY_PLAINTEXT
       value: "false"
     - name: JAVA_TOOL_OPTIONS
@@ -113,7 +113,7 @@ operate:
     runAsUser: null
   env:
     - name: CAMUNDA_OPERATE_ZEEBE_BROKERCONTACTPOINT
-      value: camunda-zeebe-gateway.camunda-combined.svc.cluster.local:26500
+      value: camunda-zeebe-gateway.test-ns.svc.cluster.local:26500
     - name: CAMUNDA_OPERATE_ZEEBE_SECURE
       value: "true"
     - name: CAMUNDA_OPERATE_ZEEBE_CERTIFICATEPATH
@@ -155,7 +155,7 @@ tasklist:
     runAsUser: null
   env:
     - name: CAMUNDA_TASKLIST_ZEEBE_BROKERCONTACTPOINT
-      value: camunda-zeebe-gateway.camunda-combined.svc.cluster.local:26500
+      value: camunda-zeebe-gateway.test-ns.svc.cluster.local:26500
     - name: CAMUNDA_TASKLIST_ZEEBE_SECURE
       value: "true"
     - name: CAMUNDA_TASKLIST_ZEEBE_CERTIFICATEPATH
