@@ -8,7 +8,6 @@
 # use a different SCC such as nonroot or anyuid.
 ##
 ---
-
 #
 # Identity.
 #
@@ -81,6 +80,24 @@ connectors:
     fsGroup: null
   containerSecurityContext:
     runAsUser: null
+  inbound:
+    mode: oauth
+  contextPath: "/connectors"
+  env:
+    - name: ZEEBE_CLIENT_BROKER_GATEWAY-ADDRESS
+      value: "camunda-zeebe-gateway.camunda-combined.svc.cluster.local:26500"
+    - name: ZEEBE_CLIENT_SECURITY_PLAINTEXT
+      value: "false"
+    - name: JAVA_TOOL_OPTIONS
+      value: "-Djavax.net.ssl.trustStore=/usr/local/certificates/keystore.jks -Djavax.net.ssl.trustStorePassword=changeit"
+  extraVolumeMounts:
+    - name: keystore
+      readOnly: true
+      mountPath: /usr/local/certificates
+  extraVolumes:
+    - name: keystore
+      secret:
+        secretName: keystore
 
 #
 # Operate.
