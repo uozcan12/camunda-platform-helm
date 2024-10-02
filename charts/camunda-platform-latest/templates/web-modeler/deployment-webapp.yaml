@@ -31,9 +31,14 @@ spec:
           image: {{ include "webModeler.webapp.image" . | quote }}
           imagePullPolicy: {{ .Values.global.image.pullPolicy }}
           {{- if .Values.webModeler.webapp.containerSecurityContext }}
-          securityContext: {{- toYaml .Values.webModeler.webapp.containerSecurityContext | nindent 12 }}
+          securityContext: {{- include "common.compatibility.renderSecurityContext" (dict "secContext" $.Values.webModeler.webapp.containerSecurityContext "context" $) | nindent 12 }}
           {{- end }}
           env:
+            - name: CAMUNDA_LICENSE_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "camundaPlatform.licenseSecretName" . }}
+                  key: {{ include "camundaPlatform.licenseSecretKey" . }}
             - name: NODE_ENV
               value: "production"
             - name: PLAY_ENABLED
@@ -86,7 +91,6 @@ spec:
             httpGet:
               {{- /* NOTE: WebApp does not support contextPath for health endpoints. */}}
               path: {{ .Values.webModeler.webapp.startupProbe.probePath }}
-              scheme: {{ .Values.webModeler.webapp.startupProbe.scheme }}
               port: http-management
             initialDelaySeconds: {{ .Values.webModeler.webapp.startupProbe.initialDelaySeconds }}
             periodSeconds: {{ .Values.webModeler.webapp.startupProbe.periodSeconds }}
@@ -99,7 +103,6 @@ spec:
             httpGet:
               {{- /* NOTE: WebApp does not support contextPath for health endpoints. */}}
               path: {{ .Values.webModeler.webapp.readinessProbe.probePath }}
-              scheme: {{ .Values.webModeler.webapp.readinessProbe.scheme }}
               port: http-management
             initialDelaySeconds: {{ .Values.webModeler.webapp.readinessProbe.initialDelaySeconds }}
             periodSeconds: {{ .Values.webModeler.webapp.readinessProbe.periodSeconds }}
@@ -112,7 +115,6 @@ spec:
             httpGet:
               {{- /* NOTE: WebApp does not support contextPath for health endpoints. */}}
               path: {{ .Values.webModeler.webapp.livenessProbe.probePath }}
-              scheme: {{ .Values.webModeler.webapp.livenessProbe.scheme }}
               port: http-management
             initialDelaySeconds: {{ .Values.webModeler.webapp.livenessProbe.initialDelaySeconds }}
             periodSeconds: {{ .Values.webModeler.webapp.livenessProbe.periodSeconds }}
@@ -150,7 +152,7 @@ spec:
       dnsPolicy: {{ .Values.webModeler.webapp.dnsPolicy | quote }}
       {{- end }}
       {{- if .Values.webModeler.webapp.podSecurityContext }}
-      securityContext: {{- toYaml .Values.webModeler.webapp.podSecurityContext | nindent 8 }}
+      securityContext: {{- include "common.compatibility.renderSecurityContext" (dict "secContext" $.Values.webModeler.webapp.podSecurityContext "context" $) | nindent 8 }}
       {{- end }}
       {{- with .Values.webModeler.webapp.nodeSelector }}
       nodeSelector:

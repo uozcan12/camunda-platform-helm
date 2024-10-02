@@ -52,6 +52,14 @@ Fail with a message if global.identity.auth.identity.existingSecret is set and g
 {{- end }}
 
 {{/*
+Fail with a message if adaptSecurityContext has any value other than "force" or "disabled".
+*/}}
+{{- if not (has .Values.global.compatibility.openshift.adaptSecurityContext (list "force" "disabled")) }}
+  {{- $errorMessage := "[camunda][error] Invalid value for adaptSecurityContext. The value must be either 'force' or 'disabled'." -}}
+  {{ printf "\n%s" $errorMessage | trimSuffix "\n" | fail }}
+{{- end }}
+
+{{/*
 Fail with a message if Identity is disabled and identityKeycloak is enabled.
 */}}
 {{- if and (not .Values.identity.enabled) .Values.identityKeycloak.enabled }}
@@ -68,6 +76,7 @@ Fail with a message if zeebeGateway.contextPath and zeebeGateway.ingress.rest.pa
   -}}
   {{ printf "\n%s" $errorMessage | trimSuffix "\n"| fail }}
 {{- end }}
+
 
 {{/*
 [opensearch] when existingSecret is provided for opensearch then password field should be empty
@@ -128,7 +137,7 @@ Fail with a message if zeebeGateway.contextPath and zeebeGateway.ingress.rest.pa
     {{- end }}
 
     {{ if and (.Values.webModeler.enabled) (not .Values.webModeler.restapi.mail.existingSecret) }}
-      {{- $existingSecretsNotConfigured = append $existingSecretsNotConfigured "webModeler.mail.existingSecret.name" }}
+      {{- $existingSecretsNotConfigured = append $existingSecretsNotConfigured "webModeler.restapi.mail.existingSecret.name" }}
     {{- end }}
 
     {{- if $existingSecretsNotConfigured }}
@@ -148,17 +157,20 @@ metadata:
   name: identity-secret-for-components
 type: Opaque
 data:
-  operate-secret: <base64-encoded-secret>
-  tasklist-secret: <base64-encoded-secret>
-  optimize-secret: <base64-encoded-secret>
+  # Ideneity apps auth.
   connectors-secret: <base64-encoded-secret>
   console-secret: <base64-encoded-secret>
-  keycloak-secret: <base64-encoded-secret>
+  operate-secret: <base64-encoded-secret>
+  optimize-secret: <base64-encoded-secret>
+  tasklist-secret: <base64-encoded-secret>
   zeebe-secret: <base64-encoded-secret>
-  admin-password: <base64-encoded-secret> # used for keycloak
-  management-password: <base64-encoded-secret> # used for keycloak
+  # Ideneity Keycloak.
+  admin-password: <base64-encoded-secret>.
+  # Ideneity Keycloak PostgreSQL.
   postgres-password: <base64-encoded-secret> # used for postgresql admin password
   password: <base64-encoded-secret> # used for postgresql user password
+  # Web Modeler.
+  smtp-password: <base64-encoded-secret> # used for web modeler mail
 
 The following values inside your values.yaml need to be set but were not:
       `
@@ -184,17 +196,20 @@ metadata:
   name: identity-secret-for-components
 type: Opaque
 data:
-  operate-secret: <base64-encoded-secret>
-  tasklist-secret: <base64-encoded-secret>
-  optimize-secret: <base64-encoded-secret>
+  # Ideneity apps auth.
   connectors-secret: <base64-encoded-secret>
   console-secret: <base64-encoded-secret>
-  keycloak-secret: <base64-encoded-secret>
+  operate-secret: <base64-encoded-secret>
+  optimize-secret: <base64-encoded-secret>
+  tasklist-secret: <base64-encoded-secret>
   zeebe-secret: <base64-encoded-secret>
-  admin-password: <base64-encoded-secret> # used for keycloak
-  management-password: <base64-encoded-secret> # used for keycloak
+  # Ideneity Keycloak.
+  admin-password: <base64-encoded-secret>.
+  # Ideneity Keycloak PostgreSQL.
   postgres-password: <base64-encoded-secret> # used for postgresql admin password
   password: <base64-encoded-secret> # used for postgresql user password
+  # Web Modeler.
+  smtp-password: <base64-encoded-secret> # used for web modeler mail
 
 The following values inside your values.yaml need to be set but were not:
       `
@@ -207,6 +222,10 @@ The following values inside your values.yaml need to be set but were not:
         {{ printf "\n%s" $errorMessage | trimSuffix "\n"| fail }}
       {{- end }}
     {{- end }}
+  {{- end }}
+  {{- if .Values.global.multiregion.installationType }}
+    {{- $installationTypeMessage := "[camunda][warning]\nDEPRECATION NOTICE: Starting from appVersion 8.7, the Camunda Helm chart will no longer support the global.multiregion.installationType option. This is replaced with a new procudure for managing multi-region installations documented here:\nhttps://docs.camunda.io/docs/self-managed/operational-guides/multi-region/dual-region-operational-procedure/\nPlease unset this option to remove the warning.\n" }}
+    {{ printf "\n%s" $installationTypeMessage }}
   {{- end }}
 {{- end }}
 

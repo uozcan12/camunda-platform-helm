@@ -38,7 +38,7 @@ spec:
           image: {{ include "camundaPlatform.imageByParams" (dict "base" .Values.global "overlay" .Values.operate) }}
           command: ['/bin/sh', '/usr/local/operate/bin/migrate']
           {{- if .Values.operate.containerSecurityContext }}
-          securityContext: {{- toYaml .Values.operate.containerSecurityContext | nindent 12 }}
+          securityContext: {{- include "common.compatibility.renderSecurityContext" (dict "secContext" $.Values.operate.containerSecurityContext "context" $) | nindent 12 }}
           {{- end }}
           env:
             {{- if and .Values.global.elasticsearch.external (include "elasticsearch.passwordIsDefined" .) }}
@@ -69,12 +69,6 @@ spec:
             - name: JAVA_TOOL_OPTIONS
               value: -Djavax.net.ssl.trustStore=/usr/local/operate/certificates/externaldb.jks
             {{- end }}
-            {{- if .Values.global.elasticsearch.enabled }}
-            - name: CAMUNDA_OPERATE_ELASTICSEARCH_HOST
-              value: {{ include "camundaPlatform.elasticsearchHost" . | quote }}
-            - name: CAMUNDA_OPERATE_ELASTICSEARCH_HTTP_PORT
-              value: {{ .Values.global.elasticsearch.url.port | quote }}
-            {{- end }}
             {{- with .Values.operate.migration.env }}
             {{- toYaml . | nindent 12 }}
             {{- end }}
@@ -82,8 +76,8 @@ spec:
             {{- toYaml .Values.operate.migration.resources | nindent 12 }}
           volumeMounts:
             - name: config
-              mountPath: /usr/local/operate/config/application.yml
-              subPath: application.yml
+              mountPath: /usr/local/operate/config/application.yaml
+              subPath: application.yaml
             - name: tmp
               mountPath: /tmp
             - name: camunda
@@ -107,9 +101,14 @@ spec:
           image: {{ include "camundaPlatform.imageByParams" (dict "base" .Values.global "overlay" .Values.operate) }}
           imagePullPolicy: {{ .Values.global.image.pullPolicy }}
           {{- if .Values.operate.containerSecurityContext }}
-          securityContext: {{- toYaml .Values.operate.containerSecurityContext | nindent 12 }}
+          securityContext: {{- include "common.compatibility.renderSecurityContext" (dict "secContext" $.Values.operate.containerSecurityContext "context" $) | nindent 12 }}
           {{- end }}
           env:
+            - name: CAMUNDA_LICENSE_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "camundaPlatform.licenseSecretName" . }}
+                  key: {{ include "camundaPlatform.licenseSecretKey" . }}
             {{- if and .Values.global.elasticsearch.external (include "elasticsearch.passwordIsDefined" .) }}
             - name: CAMUNDA_OPERATE_ELASTICSEARCH_PASSWORD
               valueFrom:
@@ -117,6 +116,11 @@ spec:
                   name: {{ include "elasticsearch.authExistingSecret" . | quote }}
                   key: {{ include "elasticsearch.authExistingSecretKey" . | quote }}
             - name: CAMUNDA_OPERATE_ZEEBE_ELASTICSEARCH_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "elasticsearch.authExistingSecret" . | quote }}
+                  key: {{ include "elasticsearch.authExistingSecretKey" . | quote }}
+            - name: CAMUNDA_DATABASE_PASSWORD
               valueFrom:
                 secretKeyRef:
                   name: {{ include "elasticsearch.authExistingSecret" . | quote }}
@@ -129,6 +133,11 @@ spec:
                   name: {{ include "opensearch.authExistingSecret" . | quote }}
                   key: {{ include "opensearch.authExistingSecretKey" . | quote }}
             - name: CAMUNDA_OPERATE_OPENSEARCH_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "opensearch.authExistingSecret" . | quote }}
+                  key: {{ include "opensearch.authExistingSecretKey" . | quote }}
+            - name: CAMUNDA_DATABASE_PASSWORD
               valueFrom:
                 secretKeyRef:
                   name: {{ include "opensearch.authExistingSecret" . | quote }}
@@ -186,6 +195,28 @@ spec:
             {{- end }}
             - name: ZEEBE_CLIENT_CONFIG_PATH
               value: /tmp/zeebe_auth_cache
+            # the host name of Operate that is used when connecting with the Zeebe cluster
+            # via atomix-cluster (SWIM)
+            - name: ZEEBE_GATEWAY_CLUSTER_HOST
+              valueFrom:
+                fieldRef:
+                  apiVersion: v1
+                  fieldPath: status.podIP
+            # the unique member id (in this case the pod name) that is used as identifier inside the SWIM cluster
+            - name: ZEEBE_GATEWAY_CLUSTER_MEMBERID
+              valueFrom:
+                fieldRef:
+                  apiVersion: v1
+                  fieldPath: metadata.name
+            # the name of the atomix cluster (SWIM) to connect to (must be the same as for the Zeebe cluster)
+            - name: ZEEBE_GATEWAY_CLUSTER_CLUSTERNAME
+              value: {{ tpl .Values.global.zeebeClusterName . }}
+            # the port the service expects requests/messages from the atomix cluster (must be exposed internally)
+            - name: ZEEBE_GATEWAY_CLUSTER_PORT
+              value: {{ .Values.operate.service.internalPort | quote }}
+            # the initial contact point to join the SWIM (atomix) cluster
+            - name: ZEEBE_GATEWAY_CLUSTER_INITIALCONTACTPOINTS
+              value: {{ tpl .Values.global.zeebeClusterName . }}:{{ .Values.zeebeGateway.service.internalPort }}
           {{- with .Values.operate.env }}
             {{- tpl (toYaml .) $ | nindent 12 }}
           {{- end }}
@@ -206,12 +237,17 @@ spec:
             - containerPort: 8080
               name: http
               protocol: TCP
+            - containerPort: 9600
+              name: management
+            - containerPort: {{ .Values.operate.service.internalPort }}
+              name: {{ .Values.operate.service.internalName }}
+              protocol: TCP
           {{- if .Values.operate.startupProbe.enabled }}
           startupProbe:
             httpGet:
               path: {{ .Values.operate.contextPath }}{{ .Values.operate.startupProbe.probePath }}
               scheme: {{ .Values.operate.startupProbe.scheme }}
-              port: http
+              port: management
             initialDelaySeconds: {{ .Values.operate.startupProbe.initialDelaySeconds }}
             periodSeconds: {{ .Values.operate.startupProbe.periodSeconds }}
             successThreshold: {{ .Values.operate.startupProbe.successThreshold }}
@@ -223,7 +259,7 @@ spec:
             httpGet:
               path: {{ .Values.operate.contextPath }}{{ .Values.operate.readinessProbe.probePath }}
               scheme: {{ .Values.operate.readinessProbe.scheme }}
-              port: http
+              port: management
             initialDelaySeconds: {{ .Values.operate.readinessProbe.initialDelaySeconds }}
             periodSeconds: {{ .Values.operate.readinessProbe.periodSeconds }}
             successThreshold: {{ .Values.operate.readinessProbe.successThreshold }}
@@ -235,7 +271,7 @@ spec:
             httpGet:
               path: {{ .Values.operate.contextPath }}{{ .Values.operate.livenessProbe.probePath }}
               scheme: {{ .Values.operate.livenessProbe.scheme }}
-              port: http
+              port: management
             initialDelaySeconds: {{ .Values.operate.livenessProbe.initialDelaySeconds }}
             periodSeconds: {{ .Values.operate.livenessProbe.periodSeconds }}
             successThreshold: {{ .Values.operate.livenessProbe.successThreshold }}
@@ -244,8 +280,8 @@ spec:
           {{- end }}
           volumeMounts:
             - name: config
-              mountPath: /usr/local/operate/config/application.yml
-              subPath: application.yml
+              mountPath: /usr/local/operate/config/application.yaml
+              subPath: application.yaml
             - name: tmp
               mountPath: /tmp
             - name: camunda
@@ -298,7 +334,7 @@ spec:
       dnsPolicy: {{ .Values.operate.dnsPolicy | quote }}
       {{- end }}
       {{- if .Values.operate.podSecurityContext }}
-      securityContext: {{- toYaml .Values.operate.podSecurityContext | nindent 8 }}
+      securityContext: {{- include "common.compatibility.renderSecurityContext" (dict "secContext" $.Values.operate.podSecurityContext "context" $) | nindent 8 }}
       {{- end }}
 {{- with .Values.operate.nodeSelector }}
       nodeSelector:

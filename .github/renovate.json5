@@ -61,8 +61,18 @@
       "matchUpdateTypes": ["patch", "pin", "digest"],
     },
     {
-      "groupName": "camunda-platform-latest",
+      "groupName": "camunda-platform-8.5",
       "addLabels": ["version/8.5", "deps/charts"],
+      "matchFileNames": [
+        "charts/camunda-platform-8.5/Chart.yaml",
+        "charts/camunda-platform-8.5/values*.yaml",
+        "charts/camunda-platform-8.5/go.*"
+      ],
+      "matchUpdateTypes": ["patch", "pin", "digest"],
+    },
+    {
+      "groupName": "camunda-platform-latest",
+      "addLabels": ["version/8.6", "deps/charts"],
       "matchFileNames": [
         "charts/camunda-platform-latest/Chart.yaml",
         "charts/camunda-platform-latest/values*.yaml",
@@ -81,7 +91,7 @@
     },
     {
       "groupName": "camunda-platform-alpha",
-      "addLabels": ["version/8.6", "deps/charts"],
+      "addLabels": ["version/8.7", "deps/charts"],
       "matchFileNames": [
         "charts/camunda-platform-alpha/Chart.yaml",
         "charts/camunda-platform-alpha/values*.yaml",

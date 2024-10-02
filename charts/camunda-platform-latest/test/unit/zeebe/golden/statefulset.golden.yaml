@@ -11,7 +11,7 @@ metadata:
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: camunda-platform
     app.kubernetes.io/component: zeebe-broker
-    app.kubernetes.io/version: "8.5.8"
+    app.kubernetes.io/version: "8.6.0-alpha5"
   annotations:
 spec:
   replicas: 3
@@ -36,7 +36,7 @@ spec:
         app.kubernetes.io/managed-by: Helm
         app.kubernetes.io/part-of: camunda-platform
         app.kubernetes.io/component: zeebe-broker
-        app.kubernetes.io/version: "8.5.8"
+        app.kubernetes.io/version: "8.6.0-alpha5"
       annotations:
     spec:
       imagePullSecrets:
@@ -45,7 +45,7 @@ spec:
         []
       containers:
         - name: zeebe
-          image: camunda/zeebe:8.5.8
+          image: camunda/zeebe:8.6.0-alpha5
           imagePullPolicy: IfNotPresent
           securityContext:
             allowPrivilegeEscalation: false
@@ -56,6 +56,11 @@ spec:
             seccompProfile:
               type: RuntimeDefault
           env:
+            - name: CAMUNDA_LICENSE_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: camunda-platform-test-license
+                  key: CAMUNDA_LICENSE_KEY
             - name: LC_ALL
               value: C.UTF-8
             - name: K8S_NAME
@@ -72,9 +77,9 @@ spec:
               value: "$(K8S_NAME).$(K8S_SERVICE_NAME)"
             - name: ZEEBE_BROKER_CLUSTER_INITIALCONTACTPOINTS
               value:
-                $(K8S_SERVICE_NAME)-0.$(K8S_SERVICE_NAME).$(K8S_NAMESPACE).svc:26502,
-                $(K8S_SERVICE_NAME)-1.$(K8S_SERVICE_NAME).$(K8S_NAMESPACE).svc:26502,
-                $(K8S_SERVICE_NAME)-2.$(K8S_SERVICE_NAME).$(K8S_NAMESPACE).svc:26502,
+                $(K8S_SERVICE_NAME)-0.$(K8S_SERVICE_NAME):26502,
+                $(K8S_SERVICE_NAME)-1.$(K8S_SERVICE_NAME):26502,
+                $(K8S_SERVICE_NAME)-2.$(K8S_SERVICE_NAME):26502,
             - name: ZEEBE_LOG_LEVEL
               value: "info"
             - name: ZEEBE_BROKER_GATEWAY_ENABLE

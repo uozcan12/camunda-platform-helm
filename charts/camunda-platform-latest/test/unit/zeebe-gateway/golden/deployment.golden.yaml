@@ -11,7 +11,7 @@ metadata:
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: camunda-platform
     app.kubernetes.io/component: zeebe-gateway
-    app.kubernetes.io/version: "8.5.8"
+    app.kubernetes.io/version: "8.6.0-alpha5"
   annotations:
     {}
 spec:
@@ -35,7 +35,7 @@ spec:
         app.kubernetes.io/managed-by: Helm
         app.kubernetes.io/part-of: camunda-platform
         app.kubernetes.io/component: zeebe-gateway
-        app.kubernetes.io/version: "8.5.8"
+        app.kubernetes.io/version: "8.6.0-alpha5"
       annotations:
     spec:
       imagePullSecrets:
@@ -44,7 +44,7 @@ spec:
         []
       containers:
         - name: zeebe-gateway
-          image: camunda/zeebe:8.5.8
+          image: camunda/zeebe:8.6.0-alpha5
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 9600
@@ -56,6 +56,11 @@ spec:
             - containerPort: 8080
               name: rest
           env:
+            - name: CAMUNDA_LICENSE_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: camunda-platform-test-license
+                  key: CAMUNDA_LICENSE_KEY
             - name: ZEEBE_STANDALONE_GATEWAY
               value: "true"
             - name: ZEEBE_GATEWAY_CLUSTER_MEMBERID
@@ -68,10 +73,6 @@ spec:
               value: "-XX:+ExitOnOutOfMemoryError"
             - name: ZEEBE_GATEWAY_CLUSTER_INITIALCONTACTPOINTS
               value: camunda-platform-test-zeebe:26502
-            - name: ZEEBE_GATEWAY_NETWORK_HOST
-              value: 0.0.0.0
-            - name: ZEEBE_GATEWAY_NETWORK_PORT
-              value: "26500"
             - name: ZEEBE_GATEWAY_CLUSTER_HOST
               valueFrom:
                 fieldRef:

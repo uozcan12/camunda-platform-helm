@@ -11,7 +11,7 @@ metadata:
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: camunda-platform
     app.kubernetes.io/component: identity
-    app.kubernetes.io/version: "8.5.6"
+    app.kubernetes.io/version: "8.6.0-alpha5"
   annotations:
     {}
 data:
@@ -159,6 +159,8 @@ data:
               permissions:
                 - definition: write:*
                   description: "Write permission"
+                - definition: admin:*
+                  description: "Admin permission"
             - name: Web Modeler API
               audience: "web-modeler-public-api"
               permissions:
@@ -178,6 +180,15 @@ data:
                   definition: write:*
                 - audience: "camunda-identity-resource-server"
                   definition: read:users
+            - name: "Web Modeler Admin"
+              description: "Grants elevated access to Web Modeler"
+              permissions:
+                - audience: "camunda-identity-resource-server"
+                  definition: read:users
+                - audience: "web-modeler-api"
+                  definition: write:*
+                - audience: "web-modeler-api"
+                  definition: admin:*
         zeebe:
           apis:
             - name: Zeebe API

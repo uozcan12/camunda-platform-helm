@@ -412,7 +412,6 @@ func (s *deploymentTemplateTest) TestContainerSetSecurityContext() {
 	options := &helm.Options{
 		SetValues: map[string]string{
 			"operate.containerSecurityContext.privileged":          "true",
-			"operate.containerSecurityContext.capabilities.add[0]": "NET_ADMIN",
 		},
 		KubectlOptions: k8s.NewKubectlOptions("", "", s.namespace),
 	}
@@ -425,7 +424,6 @@ func (s *deploymentTemplateTest) TestContainerSetSecurityContext() {
 	// then
 	securityContext := deployment.Spec.Template.Spec.Containers[0].SecurityContext
 	s.Require().True(*securityContext.Privileged)
-	s.Require().EqualValues("NET_ADMIN", securityContext.Capabilities.Add[0])
 }
 
 // https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#nodeselector
@@ -826,8 +824,8 @@ camunda.operate:
 		}
 	}
 	s.Require().Equal("config", volumeMount.Name)
-	s.Require().Equal("/usr/local/operate/config/application.yml", volumeMount.MountPath)
-	s.Require().Equal("application.yml", volumeMount.SubPath)
+	s.Require().Equal("/usr/local/operate/config/application.yaml", volumeMount.MountPath)
+	s.Require().Equal("application.yaml", volumeMount.SubPath)
 
 	s.Require().Equal("config", volume.Name)
 	s.Require().Equal("camunda-platform-test-operate-configuration", volume.ConfigMap.Name)

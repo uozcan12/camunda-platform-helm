@@ -31,18 +31,21 @@ spec:
           image: {{ include "webModeler.restapi.image" . | quote }}
           imagePullPolicy: {{ .Values.global.image.pullPolicy }}
           {{- if .Values.webModeler.restapi.containerSecurityContext }}
-          securityContext: {{- toYaml .Values.webModeler.restapi.containerSecurityContext | nindent 12 }}
+          securityContext: {{- include "common.compatibility.renderSecurityContext" (dict "secContext" $.Values.webModeler.restapi.containerSecurityContext "context" $) | nindent 12 }}
           {{- end }}
           env:
+            - name: CAMUNDA_LICENSE_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "camundaPlatform.licenseSecretName" . }}
+                  key: {{ include "camundaPlatform.licenseSecretKey" . }}
             - name: JAVA_OPTIONS
               value: "-XX:MaxRAMPercentage=80.0"
-            {{- if or (not .Values.webModeler.restapi.externalDatabase.enabled) .Values.webModeler.restapi.externalDatabase.password }}
             - name: SPRING_DATASOURCE_PASSWORD
               valueFrom:
                 secretKeyRef:
                   name: {{ include "webModeler.restapi.databaseSecretName" . }}
                   key: {{ include "webModeler.restapi.databaseSecretKey" . }}
-            {{- end }}
             {{- $smtpSecretName := (include "webModeler.restapi.smtpSecretName" .) }}
             {{- if $smtpSecretName }}
             - name: RESTAPI_MAIL_PASSWORD
@@ -91,7 +94,6 @@ spec:
           startupProbe:
             httpGet:
               path: {{ .Values.webModeler.restapi.startupProbe.probePath }}
-              scheme: {{ .Values.webModeler.restapi.startupProbe.scheme }}
               port: http-management
             initialDelaySeconds: {{ .Values.webModeler.restapi.startupProbe.initialDelaySeconds }}
             periodSeconds: {{ .Values.webModeler.restapi.startupProbe.periodSeconds }}
@@ -103,7 +105,6 @@ spec:
           readinessProbe:
             httpGet:
               path: {{ .Values.webModeler.restapi.readinessProbe.probePath }}
-              scheme: {{ .Values.webModeler.restapi.readinessProbe.scheme }}
               port: http-management
             initialDelaySeconds: {{ .Values.webModeler.restapi.readinessProbe.initialDelaySeconds }}
             periodSeconds: {{ .Values.webModeler.restapi.readinessProbe.periodSeconds }}
@@ -115,7 +116,6 @@ spec:
           livenessProbe:
             httpGet:
               path: {{ .Values.webModeler.restapi.livenessProbe.probePath }}
-              scheme: {{ .Values.webModeler.restapi.livenessProbe.scheme }}
               port: http-management
             initialDelaySeconds: {{ .Values.webModeler.restapi.livenessProbe.initialDelaySeconds }}
             periodSeconds: {{ .Values.webModeler.restapi.livenessProbe.periodSeconds }}
@@ -157,7 +157,7 @@ spec:
       dnsPolicy: {{ .Values.webModeler.restapi.dnsPolicy | quote }}
       {{- end }}
       {{- if .Values.webModeler.restapi.podSecurityContext }}
-      securityContext: {{- toYaml .Values.webModeler.restapi.podSecurityContext | nindent 8 }}
+      securityContext: {{- include "common.compatibility.renderSecurityContext" (dict "secContext" $.Values.webModeler.restapi.podSecurityContext "context" $) | nindent 8 }}
       {{- end }}
       {{- with .Values.webModeler.restapi.nodeSelector }}
       nodeSelector:

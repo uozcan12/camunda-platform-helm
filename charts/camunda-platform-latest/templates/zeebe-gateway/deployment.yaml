@@ -48,6 +48,11 @@ spec:
             - containerPort: {{  .Values.zeebeGateway.service.restPort }}
               name: {{ default "gateway" .Values.zeebeGateway.service.restName  }}
           env:
+            - name: CAMUNDA_LICENSE_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "camundaPlatform.licenseSecretName" . }}
+                  key: {{ include "camundaPlatform.licenseSecretKey" . }}
             - name: ZEEBE_STANDALONE_GATEWAY
               value: "true"
             - name: ZEEBE_GATEWAY_CLUSTER_MEMBERID
@@ -60,14 +65,24 @@ spec:
               value: {{ .Values.zeebeGateway.javaOpts | quote }}
             - name: ZEEBE_GATEWAY_CLUSTER_INITIALCONTACTPOINTS
               value: {{ tpl .Values.global.zeebeClusterName . }}:{{ .Values.zeebeGateway.service.internalPort }}
-            - name: ZEEBE_GATEWAY_NETWORK_HOST
-              value: 0.0.0.0
-            - name: ZEEBE_GATEWAY_NETWORK_PORT
-              value: {{  .Values.zeebeGateway.service.grpcPort | quote }}
             - name: ZEEBE_GATEWAY_CLUSTER_HOST
               valueFrom:
                 fieldRef:
                   fieldPath: status.podIP
+            {{- if and .Values.global.elasticsearch.external (include "elasticsearch.passwordIsDefined" .) }}
+            - name: CAMUNDA_DATABASE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "elasticsearch.authExistingSecret" . | quote }}
+                  key: {{ include "elasticsearch.authExistingSecretKey" . | quote }}
+            {{- end }}
+            {{- if and .Values.global.opensearch.enabled .Values.global.opensearch.auth.password}}
+            - name: CAMUNDA_DATABASE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "opensearch.authExistingSecret" . | quote }}
+                  key: {{ include "opensearch.authExistingSecretKey" . | quote }}
+            {{- end}}
             {{- with .Values.zeebeGateway.env }}
               {{- tpl (toYaml .) $ | nindent 12 }}
             {{- end }}
@@ -99,7 +114,7 @@ spec:
             {{ .Values.zeebeGateway.extraVolumeMounts | toYaml | nindent 12 }}
             {{- end }}
           {{- if .Values.zeebeGateway.containerSecurityContext }}
-          securityContext: {{- toYaml .Values.zeebeGateway.containerSecurityContext | nindent 12 }}
+          securityContext: {{- include "common.compatibility.renderSecurityContext" (dict "secContext" $.Values.zeebeGateway.containerSecurityContext "context" $) | nindent 12 }}
           {{- end }}
           {{- if .Values.zeebeGateway.startupProbe.enabled }}
           startupProbe:
@@ -162,7 +177,7 @@ spec:
       dnsPolicy: {{ .Values.zeebeGateway.dnsPolicy | quote }}
       {{- end }}
       {{- if .Values.zeebeGateway.podSecurityContext }}
-      securityContext: {{- toYaml .Values.zeebeGateway.podSecurityContext | nindent 8 }}
+      securityContext: {{- include "common.compatibility.renderSecurityContext" (dict "secContext" $.Values.zeebeGateway.podSecurityContext "context" $) | nindent 8 }}
       {{- end }}
 {{- with .Values.zeebeGateway.nodeSelector }}
       nodeSelector:

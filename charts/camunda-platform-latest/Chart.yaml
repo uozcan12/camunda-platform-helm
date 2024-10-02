@@ -1,7 +1,8 @@
 apiVersion: v2
 name: camunda-platform
-version: 10.4.0
-appVersion: 8.5.x
+# renovate: datasource=github-tags depName=charts/camunda-platform-alpha packageName=camunda/camunda
+version: 8.6.0-alpha5
+appVersion: 8.6.x
 description: |
   Camunda 8 Self-Managed Helm charts.
   Camunda's process automation platform allows developers to design, automate and improve processes.
@@ -22,35 +23,39 @@ dependencies:
   - name: keycloak
     alias: identityKeycloak
     repository: oci://registry-1.docker.io/bitnamicharts
-    version: 19.4.1
+    version: 22.2.6
     condition: "identity.keycloak.enabled,identityKeycloak.enabled"
   - name: postgresql
     alias: identityPostgresql
     repository: oci://registry-1.docker.io/bitnamicharts
-    version: 12.x.x
+    version: 15.x.x
     condition: "identity.postgresql.enabled,identityPostgresql.enabled"
   # WebModeler Dependencies.
   - name: web-modeler-postgresql
     alias: postgresql
-    repository: "file://../web-modeler-postgresql"
-    version: 11.x.x
+    repository: "file://../web-modeler-postgresql-15"
+    version: 15.x.x
     condition: "postgresql.enabled"
   # Shared Dependencies.
   - name: elasticsearch
     repository: oci://registry-1.docker.io/bitnamicharts
-    version: 20.0.4
+    version: 21.3.18
     condition: "elasticsearch.enabled"
   # Helpers.
   - name: common
     repository: oci://registry-1.docker.io/bitnamicharts
     version: 2.x.x
 maintainers:
-  - name: Zelldon
-    email: christopher.zell@camunda.com
   - name: aabouzaid
     email: ahmed.abouzaid@camunda.com
+  - name: drodriguez-305
+    email: daniel.rodriguez@camunda.com
+  - name: hamza-m-masood
+    email: hamza.masood@camunda.com
+  - name: jessesimpson36
+    email: jesse.simpson@camunda.com
 annotations:
-  camunda.io/helmCLIVersion: "3.15.4"
+  camunda.io/helmCLIVersion: "3.15.3"
   artifacthub.io/links: |
     - name: Camunda 8 docs
       url: https://docs.camunda.io/
@@ -61,24 +66,24 @@ annotations:
   artifacthub.io/containsSecurityUpdates: "false"
   artifacthub.io/changes: |
     - kind: added
-      description: "Adding play env var to web-modeler"
+      description: "Add volumeClaimTemplates label selector in zeebe statefulSet"
     - kind: added
-      description: "Support optional chart secrets auto-generation"
+      description: "Support migration init container for operate"
     - kind: added
-      description: "Support optional chart secrets auto-generation"
-    - kind: added
-      description: "Adding aws config in apps for OpenSearch"
+      description: "Configure camunda database to be used by v2 API"
+    - kind: changed
+      description: "Hardcoding strategy for all components and removing ability to configure strategy"
     - kind: fixed
-      description: "Enable secrets deprecation flag in alpha by default"
+      description: "Changed restAddress in Tasklist with helper function"
     - kind: fixed
-      description: "Reload identity when its config changed"
+      description: "Template grpc url in console config"
     - kind: fixed
-      description: "Correctly intend operate migration envs"
+      description: "Set the network host and port to the zeebeGateway config"
     - kind: fixed
-      description: "Add zeebe opensearch retention to app config file"
+      description: "Add constraint for contextPath and rest path to be the same for zeebe gateway"
     - kind: fixed
-      description: "Gives port-forward hostnames to external urls when no ingress is…"
+      description: "Use correct operate image for version label"
     - kind: fixed
-      description: "Added helper function smtp auth for webmodeler"
+      description: "Drop namespace from zeebe advertisedHost and initialContactPoints"
     - kind: fixed
-      description: "Correct ingress nginx annotation to activate proxy buffering by default"
+      description: "ExistingSecret for OpenSearch password can be used without defining password literal"

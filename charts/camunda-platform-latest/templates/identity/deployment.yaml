@@ -33,9 +33,14 @@ spec:
           image: {{ include "camundaPlatform.imageByParams" (dict "base" .Values.global "overlay" .Values.identity) }}
           imagePullPolicy: {{ .Values.global.image.pullPolicy }}
           {{- if .Values.identity.containerSecurityContext }}
-          securityContext: {{- toYaml .Values.identity.containerSecurityContext | nindent 12 }}
+          securityContext: {{- include "common.compatibility.renderSecurityContext" (dict "secContext" $.Values.identity.containerSecurityContext "context" $) | nindent 12 }}
           {{- end }}
           env:
+            - name: CAMUNDA_LICENSE_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "camundaPlatform.licenseSecretName" . }}
+                  key: {{ include "camundaPlatform.licenseSecretKey" . }}
             {{- if .Values.global.identity.auth.enabled }}
             {{- if eq .Values.global.identity.auth.type "KEYCLOAK"}}
             - name: KEYCLOAK_INIT_OPERATE_SECRET
@@ -130,8 +135,8 @@ spec:
               {{- else }}
               valueFrom:
                 secretKeyRef:
-                  key: {{ .Values.global.identity.auth.connectors.existingSecretKey }}
                   name: {{ include "camundaPlatform.identitySecretName" (dict "context" . "component" "connectors") }}
+                  key: {{ .Values.global.identity.auth.connectors.existingSecretKey }}
               {{- end }}
             - name: KEYCLOAK_CLIENTS_0_ROOT_URL
               value: http://placeholder
@@ -208,6 +213,8 @@ spec:
             - name: KEYCLOAK_USERS_0_ROLES_4
               value: "Web Modeler"
             - name: KEYCLOAK_USERS_0_ROLES_5
+              value: "Web Modeler Admin"
+            - name: KEYCLOAK_USERS_0_ROLES_6
               value: "Console"
             {{- end }}
             {{- end }}
@@ -318,7 +325,7 @@ spec:
       dnsPolicy: {{ .Values.identity.dnsPolicy | quote }}
       {{- end }}
       {{- if .Values.identity.podSecurityContext }}
-      securityContext: {{- toYaml .Values.identity.podSecurityContext | nindent 8 }}
+      securityContext: {{- include "common.compatibility.renderSecurityContext" (dict "secContext" $.Values.identity.podSecurityContext "context" $) | nindent 8 }}
       {{- end }}
       {{- with .Values.identity.nodeSelector }}
       nodeSelector:

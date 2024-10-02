@@ -158,6 +158,22 @@ Usage: {{ include "camundaPlatform.serviceAccountName" (dict "component" "operat
 {{- end -}}
 
 {{/*
+[camunda-platform] Get Camunda license secret name.
+*/}}
+{{- define "camundaPlatform.licenseSecretName" -}}
+  {{- $defaultSecretName := printf "%s-license" (include "camundaPlatform.fullname" .) -}}
+  {{- .Values.global.license.existingSecret | default $defaultSecretName -}}
+{{- end -}}
+
+{{/*
+[camunda-platform] Get Camunda license secret key.
+*/}}
+{{- define "camundaPlatform.licenseSecretKey" -}}
+  {{- $defaultSecretKey := "CAMUNDA_LICENSE_KEY" -}}
+  {{- .Values.global.license.existingSecretKey | default $defaultSecretKey -}}
+{{- end -}}
+
+{{/*
 ********************************************************************************
 Keycloak templates.
 ********************************************************************************
@@ -300,7 +316,7 @@ do not use this for its string value.
 
 
 {{/*
-[opensearch] Get name of opensearch auth existing secret. For more details:
+[opensearch] Get name of elasticsearch auth existing secret. For more details:
 https://docs.bitnami.com/kubernetes/apps/keycloak/configuration/manage-passwords/
 */}}
 {{- define "opensearch.authExistingSecret" -}}
@@ -530,7 +546,6 @@ Zeebe templates.
   {{- end -}}
 {{- end -}}
 
-
 {{/*
 ********************************************************************************
 Release templates.
@@ -569,7 +584,7 @@ Release templates.
   {{- end }}
 
   {{- if .Values.operate.enabled }}
-  {{- $baseURLInternal := printf "http://%s.%s:%v" (include "operate.fullname" .) .Release.Namespace .Values.operate.service.port }}
+  {{- $baseURLInternal := printf "http://%s.%s:%v" (include "operate.fullname" .) .Release.Namespace .Values.operate.service.managementPort }}
   - name: Operate
     id: operate
     version: {{ include "camundaPlatform.imageTagByParams" (dict "base" .Values.global "overlay" .Values.operate) }}
@@ -589,7 +604,7 @@ Release templates.
   {{- end }}
 
   {{- if .Values.tasklist.enabled }}
-  {{- $baseURLInternal := printf "http://%s.%s:%v" (include "tasklist.fullname" .) .Release.Namespace .Values.tasklist.service.port }}
+  {{- $baseURLInternal := printf "http://%s.%s:%v" (include "tasklist.fullname" .) .Release.Namespace .Values.tasklist.service.managementPort }}
   - name: Tasklist
     id: tasklist
     version: {{ include "camundaPlatform.imageTagByParams" (dict "base" .Values.global "overlay" .Values.tasklist) }}

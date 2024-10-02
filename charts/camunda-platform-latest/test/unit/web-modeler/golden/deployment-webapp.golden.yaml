@@ -41,7 +41,7 @@ spec:
         []
       containers:
         - name: web-modeler-webapp
-          image: "registry.camunda.cloud/web-modeler-ee/modeler-webapp:8.5.9"
+          image: "camunda/web-modeler-webapp:8.6.0-alpha5"
           imagePullPolicy: IfNotPresent
           securityContext:
             allowPrivilegeEscalation: false
@@ -52,6 +52,11 @@ spec:
             seccompProfile:
               type: RuntimeDefault
           env:
+            - name: CAMUNDA_LICENSE_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: camunda-platform-test-license
+                  key: CAMUNDA_LICENSE_KEY
             - name: NODE_ENV
               value: "production"
             - name: PLAY_ENABLED
@@ -97,7 +102,6 @@ spec:
           readinessProbe:
             httpGet:
               path: /health/readiness
-              scheme: HTTP
               port: http-management
             initialDelaySeconds: 15
             periodSeconds: 30

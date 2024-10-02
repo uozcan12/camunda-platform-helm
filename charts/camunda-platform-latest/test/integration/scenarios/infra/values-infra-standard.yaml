@@ -9,6 +9,14 @@ identity:
     key: workload
     operator: Equal
     value: standard
+identityKeycloak:
+  nodeSelector:
+    workload: standard
+  tolerations:
+  - effect: NoSchedule
+    key: workload
+    operator: Equal
+    value: standard
   postgresql:
     primary:
       nodeSelector:
@@ -18,7 +26,8 @@ identity:
         key: workload
         operator: Equal
         value: standard
-  keycloak:
+identityPostgresql:
+  primary:
     nodeSelector:
       workload: standard
     tolerations:
@@ -26,15 +35,6 @@ identity:
       key: workload
       operator: Equal
       value: standard
-    postgresql:
-      primary:
-        nodeSelector:
-          workload: standard
-        tolerations:
-        - effect: NoSchedule
-          key: workload
-          operator: Equal
-          value: standard
 
 # Web Apps.
 console:
@@ -123,7 +123,7 @@ zeebe:
     key: workload
     operator: Equal
     value: standard
-zeebe-gateway:
+zeebeGateway:
   nodeSelector:
     workload: standard
   tolerations:

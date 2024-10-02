@@ -41,7 +41,7 @@ spec:
         []
       containers:
         - name: web-modeler-websockets
-          image: "registry.camunda.cloud/web-modeler-ee/modeler-websockets:8.5.9"
+          image: "camunda/web-modeler-websockets:8.6.0-alpha5"
           imagePullPolicy: IfNotPresent
           securityContext:
             allowPrivilegeEscalation: false
@@ -52,6 +52,11 @@ spec:
             seccompProfile:
               type: RuntimeDefault
           env:
+            - name: CAMUNDA_LICENSE_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: camunda-platform-test-license
+                  key: CAMUNDA_LICENSE_KEY
             - name: APP_NAME
               value: "Web Modeler WebSockets"
             - name: PUSHER_APP_ID
@@ -81,9 +86,7 @@ spec:
               name: http
               protocol: TCP
           readinessProbe:
-            httpGet:
-              path: /up
-              scheme: HTTP
+            tcpSocket:
               port: http
             initialDelaySeconds: 10
             periodSeconds: 30

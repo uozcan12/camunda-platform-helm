@@ -49,6 +49,25 @@ global:
       helm.sh/hook: 'pre-install'
       helm.sh/resource-policy: 'keep'
 
+  ## License configuration.
+  ## @extra global.license
+  license:
+    ## @param global.license.key if set, it will be exposed as "CAMUNDA_LICENSE_KEY" in the apps.
+    key:
+    ## @param global.license.existingSecret you can provide an existing secret name for Camunda license secret.
+    existingSecret:
+    ## @param global.license.existingSecretKey you can provide the key within the existing secret object for Camunda license key.
+    existingSecretKey:
+
+  ## @extra global.compatibility Compatibility adaptations for Kubernetes platforms
+  compatibility:
+    ## Compatibility adaptations for Openshift
+    ##
+    openshift:
+      ## @param global.compatibility.openshift.adaptSecurityContext Adapt the securityContext sections of the deployment to make them compatible with Openshift restricted-v2 SCC: remove runAsUser, runAsGroup and fsGroup and let the platform use their allowed default IDs. Possible values: force (perform the adaptation always), disabled (do not perform adaptation)
+      ##
+      adaptSecurityContext: disabled
+
   ## Multitenancy configuration.
   ## @extra global.multitenancy
   multitenancy:
@@ -61,7 +80,7 @@ global:
   ## @skip global.testDeprecationFlags
   testDeprecationFlags:
     ## @skip global.testDeprecationFlags.existingSecretsMustBeSet give error or warning when existingSecret is not set
-    existingSecretsMustBeSet: "ignore"
+    existingSecretsMustBeSet: "warning"
 
   ## @param global.annotations Annotations can be used to define common annotations, which should be applied to all deployments
   annotations: {}
@@ -126,7 +145,7 @@ global:
       username:
       password:
       existingSecret:
-      existingSecretKey:
+      existingSecretKey: "password"
       ## @param  global.elasticsearch.disableExporter DEPRECATED: this value is not needed anymore. Use global.elasticsearch.enabled
     disableExporter: false
     ## @extra global.elasticsearch.url Configuration to configure elasticsearch url
@@ -164,7 +183,7 @@ global:
       username:
       password:
       existingSecret:
-      existingSecretKey:
+      existingSecretKey: "password"
     ## @extra global.opensearch.url Configuration to configure opensearch url
     ## @param global.opensearch.url.protocol defines the external opensearch access protocol
     ## @param global.opensearch.url.host defines the external opensearch host, ideally the service name inside the namespace
@@ -178,16 +197,6 @@ global:
 
   # Identity configuration to configure identity specifics on global level, which can be accessed by other sub-charts
   identity:
-    ## @skip This is only used in Keycloak deployment to copy Camunda theme for Keycloak login page.
-    image:
-      ## @skip global.identity.image.registry can be used to set container image registry.
-      registry: "docker.io"
-      ## @skip global.identity.image.repository defines which image repository to use
-      repository: camunda/identity
-      ## @skip global.identity.image.tag can be set to overwrite the global tag, which should be used in that chart
-      tag: 8.5.6
-      ## @skip global.identity.image.pullPolicy defines the image pull policy which should be used https://kubernetes.io/docs/concepts/containers/images/#image-pull-policy
-      pullPolicy: IfNotPresent
     service:
       ## @param global.identity.service.url
       url:
@@ -244,7 +253,6 @@ global:
         ## @param global.identity.auth.connectors.clientId defines the client id, which is used by Connectors in authentication flows.
         clientId: connectors
         ## @param global.identity.auth.connectors.existingSecret can be used to use an own existing secret. If not set a random secret is generated.
-        # The existing secret should contain an `connectors-secret` field, which will be used as secret for the identity-Connectors communication.
         existingSecret:
         ## @param global.identity.auth.connectors.existingSecretKey defines the key within the existing secret object.
         existingSecretKey: connectors-secret
@@ -256,7 +264,6 @@ global:
         ## @param global.identity.auth.identity.audience defines the audience, which is used by Identity.
         audience: camunda-identity-resource-server
         ## @param global.identity.auth.identity.existingSecret can be used to reference an existing secret. This should ONLY be used for an external OIDC provider. If not set, a random secret is generated.
-        # The existing secret should contain an `identity-secret` field, which will be used as secret for the identity-identity communication.
         existingSecret:
         ## @param global.identity.auth.identity.existingSecretKey defines the key within the existing secret object.
         existingSecretKey: identity-secret
@@ -277,7 +284,6 @@ global:
         ## @param global.identity.auth.operate.audience defines the audience, which is used by Operate.
         audience: operate-api
         ## @param global.identity.auth.operate.existingSecret can be used to reference an existing secret. If not set, a random secret is generated.
-        # The existing secret should contain an `operate-secret` field, which will be used as secret for the identity-Operate communication.
         existingSecret:
         ## @param global.identity.auth.operate.existingSecretKey defines the key within the existing secret object.
         existingSecretKey: operate-secret
@@ -293,7 +299,6 @@ global:
         ## @param global.identity.auth.tasklist.audience defines the audience, which is used by Tasklist.
         audience: tasklist-api
         ## @param global.identity.auth.tasklist.existingSecret can be used to use an own existing secret. If not set a random secret is generated.
-        # The existing secret should contain an `tasklist-secret` field, which will be used as secret for the identity-Tasklist communication.
         existingSecret:
         ## @param global.identity.auth.tasklist.existingSecretKey defines the key within the existing secret object.
         existingSecretKey: tasklist-secret
@@ -309,7 +314,6 @@ global:
         ## @param global.identity.auth.optimize.audience defines the audience, which is used by Optimize.
         audience: optimize-api
         ## @param global.identity.auth.optimize.existingSecret can be used to use an own existing secret. If not set a random secret is generated.
-        # The existing secret should contain an `optimize-secret` field, which will be used as secret for the identity-Optimize communication.
         existingSecret:
         ## @param global.identity.auth.optimize.existingSecretKey defines the key within the existing secret object.
         existingSecretKey: optimize-secret
@@ -340,7 +344,6 @@ global:
         ## @param global.identity.auth.console.wellKnown defines the uri for the well known config which is used by Console (optional).
         wellKnown: https://well-known-uri
         ## @param global.identity.auth.console.existingSecret can be used to use an own existing secret. If not set a random secret is generated.
-        # The existing secret should contain an `console-secret` field, which will be used as secret for the identity-console communication.
         existingSecret:
         ## @param global.identity.auth.console.existingSecretKey defines the key within the existing secret object.
         existingSecretKey: console-secret
@@ -354,7 +357,6 @@ global:
         ## @param global.identity.auth.zeebe.clientId defines the client id, which is used by Zeebe in authentication flows.
         clientId: zeebe
         ## @param global.identity.auth.zeebe.existingSecret can be used to use an own existing secret. If not set a random secret is generated.
-        # The existing secret should contain an `zeebe-secret` field, which will be used as secret for the Identity-Zeebe communication.
         existingSecret:
         ## @param global.identity.auth.zeebe.existingSecretKey defines the key within the existing secret object.
         existingSecretKey: zeebe-secret
@@ -397,14 +399,14 @@ console:
   configuration: ""
 
   ## console.image configuration to configure the Console image specifics
+  # https://hub.docker.com/r/camunda/console/tags
   image:
     ## @param console.image.registry can be used to set container image registry.
-    registry: registry.camunda.cloud
+    registry: ""
     ## @param console.image.repository defines which image repository to use
-    repository: console/console-sm
+    repository: camunda/console
     ## @param console.image.tag can be used to set the Docker image tag for the Console image (overwrites global.image.tag)
-    # renovate: datasource=docker depName=camunda/console lookupName=registry.camunda.cloud/console/console-sm
-    tag: 8.5.112
+    tag: 8.6.0-alpha5
     ## @param console.image.pullSecrets can be used to configure image pull secrets https://kubernetes.io/docs/concepts/containers/images/#specifying-imagepullsecrets-on-a-pod
     pullSecrets: []
 
@@ -547,7 +549,7 @@ console:
     automountServiceAccountToken: false
 
   ingress:
-    ## @param console.ingress.enabled if true, an ingress resource is deployed with the Console deployment. Only useful if an ingress controller is available, like nginx.
+    ## @param console.ingress.enabled if true, an ingress resource is deployed with the Console deployment. Only useful if an ingress controller is available, like nginx. Warning, separated ingress is deprecated and will be removed in the next release, please use global.ingress instead.
     enabled: false
     ## @param console.ingress.className defines the class or configuration of ingress which should be used by the controller
     className: nginx
@@ -638,7 +640,7 @@ zeebe:
      ## @param zeebe.image.repository defines which image repository to use
     repository: camunda/zeebe
      ## @param zeebe.image.tag can be set to overwrite the global tag, which should be used in that chart
-    tag: 8.5.8
+    tag: 8.6.0-alpha5
      ## @param zeebe.image.pullSecrets can be used to configure image pull secrets https://kubernetes.io/docs/concepts/containers/images/#specifying-imagepullsecrets-on-a-pod
     pullSecrets: []
 
@@ -931,7 +933,7 @@ zeebeGateway:
     ## @param zeebeGateway.image.repository defines which image repository to use
     repository: camunda/zeebe
     ## @param zeebeGateway.image.tag can be set to overwrite the global tag, which should be used in that chart
-    tag: 8.5.8
+    tag: 8.6.0-alpha5
     ## @param zeebeGateway.image.pullSecrets can be used to configure image pull secrets https://kubernetes.io/docs/concepts/containers/images/#specifying-imagepullsecrets-on-a-pod
     pullSecrets: []
 
@@ -1243,7 +1245,7 @@ operate:
     ## @param operate.image.repository defines which image repository to use
     repository: camunda/operate
     ## @param operate.image.tag can be set to overwrite the global tag, which should be used in that chart
-    tag: 8.5.7
+    tag: 8.6.0-alpha5
     ## @param operate.image.pullSecrets can be used to configure image pull secrets https://kubernetes.io/docs/concepts/containers/images/#specifying-imagepullsecrets-on-a-pod
     pullSecrets: []
 
@@ -1296,6 +1298,12 @@ operate:
     type: ClusterIP
     ## @param operate.service.port defines the port of the service, where the Operate web application will be available
     port: 80
+    ## @param operate.service.managementPort defines the management port of the service
+    managementPort: 9600
+    ## @param operate.service.internalPort defines the port of the internal api endpoint, which is used for internal communication
+    internalPort: 26502
+    ## @param operate.service.internalName defines the name of the internal api endpoint, which is used for internal communication
+    internalName: "internal"
 
   ## @extra operate.resources configuration to set request and limit configuration for the container https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/#requests-and-limits
   ## @param operate.resources.requests.cpu
@@ -1338,7 +1346,7 @@ operate:
     automountServiceAccountToken: false
 
   ingress:
-    ## @param operate.ingress.enabled if true, an ingress resource is deployed with the Operate deployment. Only useful if an ingress controller is available, like nginx.
+    ## @param operate.ingress.enabled if true, an ingress resource is deployed with the Operate deployment. Only useful if an ingress controller is available, like nginx. Warning, separated ingress is deprecated and will be removed in the next release, please use global.ingress instead.
     enabled: false
     ## @param operate.ingress.className defines the class or configuration of ingress which should be used by the controller
     className: nginx
@@ -1503,7 +1511,7 @@ tasklist:
     ## @param tasklist.image.repository defines which image repository to use
     repository: camunda/tasklist
     ## @param tasklist.image.tag can be set to overwrite the global tag, which should be used in that chart
-    tag: 8.5.8
+    tag: 8.6.0-alpha5
     ## @param tasklist.image.pullSecrets can be used to configure image pull secrets https://kubernetes.io/docs/concepts/containers/images/#specifying-imagepullsecrets-on-a-pod
     pullSecrets: []
 
@@ -1539,6 +1547,12 @@ tasklist:
     type: ClusterIP
     ## @param tasklist.service.port defines the port of the service, where the tasklist web application will be available
     port: 80
+    ## @param tasklist.service.managementPort defines the management port of the service
+    managementPort: 9600
+    ## @param tasklist.service.internalPort defines the port of the internal api endpoint, which is used for internal communication
+    internalPort: 26502
+    ## @param tasklist.service.internalName defines the name of the internal api endpoint, which is used for internal communication
+    internalName: "internal"
 
   ## @extra tasklist.identity configures app user management.
   identity:
@@ -1676,7 +1690,7 @@ tasklist:
       memory: 2Gi
 
   ingress:
-    ## @param tasklist.ingress.enabled if true, an ingress resource is deployed with the tasklist deployment. Only useful if an ingress controller is available, like nginx.
+    ## @param tasklist.ingress.enabled if true, an ingress resource is deployed with the tasklist deployment. Only useful if an ingress controller is available, like nginx. Warning, separated ingress is deprecated and will be removed in the next release, please use global.ingress instead.
     enabled: false
     ## @param tasklist.ingress.className defines the class or configuration of ingress which should be used by the controller
     className: nginx
@@ -1741,7 +1755,7 @@ optimize:
     ## @param optimize.image.repository defines which image repository to use
     repository: camunda/optimize
     ## @param optimize.image.tag can be set to overwrite the global tag, which should be used in that chart
-    tag: 8.5.6
+    tag: 8.6.0-alpha5
     ## @param optimize.image.pullSecrets can be used to configure image pull secrets https://kubernetes.io/docs/concepts/containers/images/#specifying-imagepullsecrets-on-a-pod
     pullSecrets: []
 
@@ -1933,7 +1947,7 @@ optimize:
       memory: 2Gi
 
   ingress:
-    ## @param optimize.ingress.enabled if true, an ingress resource is deployed with the Optimize deployment. Only useful if an ingress controller is available, like nginx.
+    ## @param optimize.ingress.enabled if true, an ingress resource is deployed with the Optimize deployment. Only useful if an ingress controller is available, like nginx. Warning, separated ingress is deprecated and will be removed in the next release, please use global.ingress instead.
     enabled: false
     ## @param optimize.ingress.className defines the class or configuration of ingress which should be used by the controller
     className: nginx
@@ -1967,6 +1981,240 @@ optimize:
   ## @param optimize.dnsPolicy https://kubernetes.io/docs/concepts/services-networking/dns-pod-service/#pod-s-dns-policy
   dnsPolicy: ""
   ## @param optimize.dnsConfig https://kubernetes.io/docs/concepts/services-networking/dns-pod-service/#pod-dns-config
+  dnsConfig: {}
+
+#########################################################################################################
+###### #    # ######  ####  #    # ##### #  ####  #    #       # #####  ###### #    # ##### # ##### #   #
+#       #  #  #      #    # #    #   #   # #    # ##   #       # #    # #      ##   #   #   #   #    # #
+#####    ##   #####  #      #    #   #   # #    # # #  # ##### # #    # #####  # #  #   #   #   #     #
+#        ##   #      #      #    #   #   # #    # #  # #       # #    # #      #  # #   #   #   #     #
+#       #  #  #      #    # #    #   #   # #    # #   ##       # #    # #      #   ##   #   #   #     #
+###### #    # ######  ####   ####    #   #  ####  #    #       # #####  ###### #    #   #   #   #     #
+#########################################################################################################
+## @section executionIdentity Parameters
+## @extra executionIdentity configuration for executionIdentity.
+executionIdentity:
+  ## @param executionIdentity.enabled if true, the executionIdentity deployment and its related resources are deployed via a helm release
+  enabled: false
+
+  ## @param executionIdentity.configuration Configuration passed directly to executionIdentity as YAML file. More details on [executionIdentity official documentations](https://docs.camunda.io/docs/self-managed/executionIdentity-deployment/configuration/)
+  configuration: ""
+
+  ## executionIdentity.image configuration to configure the executionIdentity image specifics
+  image:
+    ## @param executionIdentity.image.registry can be used to set container image registry.
+    registry: ""
+    ## @param executionIdentity.image.repository defines which image repository to use
+    repository: camunda/camunda
+    ## @param executionIdentity.image.tag can be used to set the Docker image tag for the executionIdentity image (overwrites global.image.tag)
+    # renovate: datasource=docker depName=camunda/executionIdentity lookupName=registry.camunda.cloud/executionIdentity/executionIdentity-sm
+    tag: SNAPSHOT
+    ## @param executionIdentity.image.pullSecrets can be used to configure image pull secrets https://kubernetes.io/docs/concepts/containers/images/#specifying-imagepullsecrets-on-a-pod
+    pullSecrets: []
+
+  ## @param executionIdentity.sidecars can be used to attach extra containers to the executionIdentity deployment
+  sidecars: []
+
+  ## @param executionIdentity.replicas Number of executionIdentity replicas
+  replicas: 1
+
+  ## executionIdentity.keycloak configuration to configure Keycloak authentication settings.
+  keycloak:
+    ## @param executionIdentity.keycloak.realm Specifies the Keycloak realm used for authentication.
+    realm: "camunda-platform"
+
+  ## @param executionIdentity.contextPath can be used to make executionIdentity web application works on a custom sub-path. This is mainly used to run Camunda web applications under a single domain.
+  contextPath: ""
+
+  ## @param executionIdentity.initContainers can be used to set up extra init containers for the application Pod
+  initContainers: []
+
+  ## @param executionIdentity.podAnnotations can be used to define extra executionIdentity pod annotations
+  podAnnotations: {}
+  ## @param executionIdentity.podLabels can be used to define extra executionIdentity pod labels
+  podLabels: {}
+
+  ## @param executionIdentity.logging configuration for the executionIdentity logging. This template will be directly included in the Operate configuration YAML file
+  logging: {}
+
+  ## executionIdentity.service configuration to configure the executionIdentity service.
+  service:
+    ## @param executionIdentity.service.annotations can be used to define annotations, which will be applied to the executionIdentity service
+    annotations: {}
+    ## @param executionIdentity.service.type defines the type of the service https://kubernetes.io/docs/concepts/services-networking/service/#publishing-services-service-types
+    type: ClusterIP
+    ## @param executionIdentity.service.port defines the port number where the web application will be available
+    port: 80
+    ## @param executionIdentity.service.serverName defines the port name where the web application will be available
+    serverName: http
+    ## @param executionIdentity.service.managementPort defines the management port used to access metrics and app status
+    managementPort: 9600
+
+  ## executionIdentity.resources configuration to set request and limit configuration for the container https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/#requests-and-limits
+  ## @param executionIdentity.resources.requests.memory
+  ## @param executionIdentity.resources.limits.cpu
+  ## @param executionIdentity.resources.limits.memory
+  ## @param executionIdentity.resources.requests.cpu
+  resources:
+    requests:
+      cpu: 1
+      memory: 1Gi
+    limits:
+      cpu: 2
+      memory: 2Gi
+
+  ## @param executionIdentity.env can be used to set extra environment variables in each app container
+  env: []
+  ## @param executionIdentity.envFrom list of environment variables to import from configMapRef and secretRef
+  envFrom: []
+  ## @param executionIdentity.command can be used to override the default command provided by the container image. See https://kubernetes.io/docs/tasks/inject-data-application/define-command-argument-container/
+  command: []
+  ## @param executionIdentity.extraVolumes can be used to define extra volumes for the executionIdentity pods, useful for TLS and self-signed certificates
+  extraVolumes: []
+  ## @param executionIdentity.extraVolumeMounts can be used to mount extra volumes for the executionIdentity pods, useful for TLS and self-signed certificates
+  extraVolumeMounts: []
+
+  ## executionIdentity.startupProbe configuration
+  startupProbe:
+    ## @param executionIdentity.startupProbe.enabled if true, the startup probe is enabled in app container
+    enabled: false
+    ## @param executionIdentity.startupProbe.scheme defines the startup probe scheme used on calling the probePath
+    scheme: HTTP
+    ## @param executionIdentity.startupProbe.probePath defines the startup probe route used on the app
+    probePath: /actuator/health
+    ## @param executionIdentity.startupProbe.initialDelaySeconds defines the number of seconds after the container has started before
+    # the probe is initiated.
+    initialDelaySeconds: 30
+    ## @param executionIdentity.startupProbe.periodSeconds defines how often the probe is executed
+    periodSeconds: 30
+    ## @param executionIdentity.startupProbe.successThreshold defines how often it needs to be true to be marked as ready, after failure
+    successThreshold: 1
+    ## @param executionIdentity.startupProbe.failureThreshold defines when the probe is considered as failed so the Pod will be marked Unready
+    failureThreshold: 5
+    ## @param executionIdentity.startupProbe.timeoutSeconds defines the seconds after the probe times out
+    timeoutSeconds: 1
+
+  ## executionIdentity.readinessProbe configuration
+  readinessProbe:
+    ## @param executionIdentity.readinessProbe.enabled if true, the readiness probe is enabled in app container
+    enabled: true
+    ## @param executionIdentity.readinessProbe.scheme defines the startup probe scheme used on calling the probePath
+    scheme: HTTP
+    ## @param executionIdentity.readinessProbe.probePath defines the readiness probe route used on the app
+    probePath: /actuator/health
+    ## @param executionIdentity.readinessProbe.initialDelaySeconds defines the number of seconds after the container has started before
+    # the probe is initiated.
+    initialDelaySeconds: 30
+    ## @param executionIdentity.readinessProbe.periodSeconds defines how often the probe is executed
+    periodSeconds: 30
+    ## @param executionIdentity.readinessProbe.successThreshold defines how often it needs to be true to be marked as ready, after failure
+    successThreshold: 1
+    ## @param executionIdentity.readinessProbe.failureThreshold defines when the probe is considered as failed so the Pod will be marked Unready
+    failureThreshold: 5
+    ## @param executionIdentity.readinessProbe.timeoutSeconds defines the seconds after the probe times out
+    timeoutSeconds: 1
+
+  ## executionIdentity.livenessProbe configuration
+  livenessProbe:
+    ## @param executionIdentity.livenessProbe.enabled if true, the liveness probe is enabled in app container
+    enabled: false
+    ## @param executionIdentity.livenessProbe.scheme defines the startup probe scheme used on calling the probePath
+    scheme: HTTP
+    ## @param executionIdentity.livenessProbe.probePath defines the liveness probe route used on the app
+    probePath: /actuator/health
+    ## @param executionIdentity.livenessProbe.initialDelaySeconds defines the number of seconds after the container has started before
+    # the probe is initiated.
+    initialDelaySeconds: 30
+    ## @param executionIdentity.livenessProbe.periodSeconds defines how often the probe is executed
+    periodSeconds: 30
+    ## @param executionIdentity.livenessProbe.successThreshold defines how often it needs to be true to be considered successful after having failed
+    successThreshold: 1
+    ## @param executionIdentity.livenessProbe.failureThreshold defines when the probe is considered as failed so the container will be restarted
+    failureThreshold: 5
+    ## @param executionIdentity.livenessProbe.timeoutSeconds defines the seconds after the probe times out
+    timeoutSeconds: 1
+
+  ## executionIdentity.metrics configuration
+  metrics:
+    ## @param executionIdentity.metrics.prometheus Prometheus metrics endpoint
+    prometheus: /prometheus
+
+  ## executionIdentity.serviceAccount configuration for the service account where the executionIdentity pods are assigned to
+  serviceAccount:
+    ## @param executionIdentity.serviceAccount.enabled if true, enables the executionIdentity service account
+    enabled: true
+    ## @param executionIdentity.serviceAccount.name can be used to set the name of the executionIdentity service account
+    name: ""
+    ## @param executionIdentity.serviceAccount.annotations can be used to set the annotations of the Operate service account
+    annotations: {}
+    ## @param executionIdentity.serviceAccount.automountServiceAccountToken can be used to control whether the service account token should be automatically mounted
+    automountServiceAccountToken: false
+
+  ingress:
+    ## @param executionIdentity.ingress.enabled if true, an ingress resource is deployed with the executionIdentity deployment. Only useful if an ingress controller is available, like nginx.
+    enabled: false
+    ## @param executionIdentity.ingress.className defines the class or configuration of ingress which should be used by the controller
+    className: nginx
+    ## @param executionIdentity.ingress.annotations [object] defines the ingress related annotations, consumed mostly by the ingress controller
+    ## @skip executionIdentity.ingress.annotations.ingress.kubernetes.io/rewrite-target
+    ## @skip executionIdentity.ingress.annotations.nginx.ingress.kubernetes.io/ssl-redirect
+    ## @skip executionIdentity.ingress.annotations.nginx.ingress.kubernetes.io/proxy-buffer-size
+    annotations:
+      ingress.kubernetes.io/rewrite-target: '/'
+      nginx.ingress.kubernetes.io/ssl-redirect: 'false'
+      nginx.ingress.kubernetes.io/proxy-buffer-size: '128k'
+      nginx.ingress.kubernetes.io/proxy-buffering: 'on'
+    ## @param executionIdentity.ingress.path defines the path which is associated with the executionIdentity service and port https://kubernetes.io/docs/concepts/services-networking/ingress/#ingress-rules
+    path: /
+    ## @param executionIdentity.ingress.pathType can be used to define the Ingress path type. https://kubernetes.io/docs/concepts/services-networking/ingress/#path-types
+    pathType: Prefix
+    ## @param executionIdentity.ingress.host can be used to define the host of the ingress rule. https://kubernetes.io/docs/concepts/services-networking/ingress/#ingress-rules
+    # If not specified the rules applies to all http traffic, if specified the rule applies to that host.
+    host: ""
+    ## executionIdentity.ingress.tls configuration for tls on the ingress resource https://kubernetes.io/docs/concepts/services-networking/ingress/#tls
+    tls:
+      ## @param executionIdentity.ingress.tls.enabled if true, then tls is configured on the ingress resource. If enabled the Ingress.host need to be defined.
+      enabled: false
+      ## @param executionIdentity.ingress.tls.secretName defines the secret name which contains the TLS private key and certificate
+      secretName: camunda-platform-execution-identity
+
+  ## @extra executionIdentity.podSecurityContext defines the security options the executionIdentity broker pod should be run with
+  podSecurityContext:
+    ## @param executionIdentity.podSecurityContext.runAsNonRoot run as non root
+    runAsNonRoot: true
+    ## @param executionIdentity.podSecurityContext.fsGroup
+    fsGroup: 1001
+    ## @extra executionIdentity.podSecurityContext.seccompProfile
+    seccompProfile:
+      ## @param executionIdentity.podSecurityContext.seccompProfile.type
+      type: RuntimeDefault
+
+  # ContainerSecurityContext defines the security options the executionIdentity broker container should be run with
+  containerSecurityContext:
+    ## @param executionIdentity.containerSecurityContext.allowPrivilegeEscalation
+    allowPrivilegeEscalation: false
+    ## @param executionIdentity.containerSecurityContext.privileged
+    privileged: false
+    ## @param executionIdentity.containerSecurityContext.readOnlyRootFilesystem
+    readOnlyRootFilesystem: true
+    ## @param executionIdentity.containerSecurityContext.runAsNonRoot
+    runAsNonRoot: true
+    ## @param executionIdentity.containerSecurityContext.runAsUser
+    runAsUser: 1001
+    ## @extra executionIdentity.containerSecurityContext.seccompProfile
+    seccompProfile:
+      ## @param executionIdentity.containerSecurityContext.seccompProfile.type
+      type: RuntimeDefault
+
+  ## @param executionIdentity.nodeSelector can be used to define on which nodes the executionIdentity pods should run
+  nodeSelector: {}
+  ## @param executionIdentity.tolerations can be used to define pod toleration's https://kubernetes.io/docs/concepts/scheduling-eviction/taint-and-toleration/
+  tolerations: []
+  ## @param executionIdentity.affinity can be used to define pod affinity or anti-affinity https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#affinity-and-anti-affinity
+  affinity: {}
+  ## @param executionIdentity.dnsPolicy https://kubernetes.io/docs/concepts/services-networking/dns-pod-service/#pod-s-dns-policy
+  dnsPolicy: ""
+  ## @param executionIdentity.dnsConfig https://kubernetes.io/docs/concepts/services-networking/dns-pod-service/#pod-dns-config
   dnsConfig: {}
 
 ############################################
@@ -2022,7 +2270,7 @@ identity:
     ## @param identity.image.repository defines which image repository to use
     repository: camunda/identity
     ## @param identity.image.tag can be set to overwrite the global tag, which should be used in that chart
-    tag: 8.5.6
+    tag: 8.6.0-alpha5
     ## @param identity.image.pullSecrets can be used to configure image pull secrets https://kubernetes.io/docs/concepts/containers/images/#specifying-imagepullsecrets-on-a-pod
     pullSecrets: []
 
@@ -2192,7 +2440,7 @@ identity:
     automountServiceAccountToken: true
 
   ingress:
-    ## @param identity.ingress.enabled if true, an ingress resource is deployed with the identity deployment. Only useful if an ingress controller is available, like nginx.
+    ## @param identity.ingress.enabled if true, an ingress resource is deployed with the identity deployment. Only useful if an ingress controller is available, like nginx. Warning, separated ingress is deprecated and will be removed in the next release, please use global.ingress instead.
     enabled: false
     ## @param identity.ingress.className defines the class or configuration of ingress which should be used by the controller
     className: nginx
@@ -2262,6 +2510,17 @@ identityPostgresql:
   ## @param identityPostgresql.enabled Enable Identity PostgreSQL Helm chart. Required for Multi-Tenancy.
   ##
   enabled: false
+  ## @extra identityPostgresql.global.compatibility Compatibility adaptations for Kubernetes platforms
+  global:
+    ## Compatibility adaptations for Kubernetes platforms
+    ##
+    compatibility:
+      ## Compatibility adaptations for Openshift
+      ##
+      openshift:
+        ## @param identityPostgresql.global.compatibility.openshift.adaptSecurityContext Adapt the securityContext sections of the deployment to make them compatible with Openshift restricted-v2 SCC: remove runAsUser, runAsGroup and fsGroup and let the platform use their allowed default IDs. Possible values: force (perform the adaptation always), disabled (do not perform adaptation)
+        ##
+        adaptSecurityContext: "{{ .Values.global.compatibility.openshift.adaptSecurityContext | default \"disabled\" }}"
   # https://hub.docker.com/r/bitnami/postgresql/tags
   ## @param identityPostgresql.image.repository PostgreSQL repo
   ## @param identityPostgresql.image.tag PostgreSQL image tag
@@ -2285,6 +2544,11 @@ identityPostgresql:
     ## @param identityPostgresql.auth.existingSecret Name of an existing secret resource containing the database credentials
     ##
     existingSecret:
+    secretKeys:
+      ## @param identityPostgresql.auth.secretKeys.adminPasswordKey defines the key within the existing secret object for PostgreSQL admin.
+      adminPasswordKey: "postgres-password"
+      ## @param identityPostgresql.auth.secretKeys.userPasswordKey defines the key within the existing secret object for PostgreSQL user.
+      userPasswordKey: "password"
 
 # Identity.
 #    # ###### #   #  ####  #       ####    ##   #    #
@@ -2298,6 +2562,17 @@ identityPostgresql:
 identityKeycloak:
   ## @param identityKeycloak.enabled Enable Identity Keycloak Helm chart. It is used incorporate with "global.identity.keycloak" to use your own Keycloak instead of the one comes with Camunda Helm chart
   enabled: true
+  ## @extra identityKeycloak.global.compatibility Compatibility adaptations for Kubernetes platforms
+  global:
+    ## Compatibility adaptations for Kubernetes platforms
+    ##
+    compatibility:
+      ## Compatibility adaptations for Openshift
+      ##
+      openshift:
+        ## @param identityKeycloak.global.compatibility.openshift.adaptSecurityContext Adapt the securityContext sections of the deployment to make them compatible with Openshift restricted-v2 SCC: remove runAsUser, runAsGroup and fsGroup and let the platform use their allowed default IDs. Possible values: force (perform the adaptation always), disabled (do not perform adaptation)
+        ##
+        adaptSecurityContext: "{{ .Values.global.compatibility.openshift.adaptSecurityContext | default \"disabled\" }}"
   ## @param identityKeycloak.nameOverride the name used for Keycloak.
   nameOverride: "keycloak"
 
@@ -2305,9 +2580,9 @@ identityKeycloak:
   # https://hub.docker.com/r/bitnami/keycloak/tags
   image:
     ## @param identityKeycloak.image.repository image repo
-    repository: bitnami/keycloak
+    repository: camunda/keycloak
     ## @param identityKeycloak.image.tag image tag
-    tag: 23.0.7
+    tag: 25.0.4
 
   ## @extra identityKeycloak.postgresql configuration.
   postgresql:
@@ -2317,6 +2592,14 @@ identityKeycloak:
       repository: bitnami/postgresql
       ## @param identityKeycloak.postgresql.image.tag image tag
       tag: 15.8.0
+    auth:
+      ## @param identityKeycloak.postgresql.auth.existingSecret defines the existing secret resource containing the database credentials
+      existingSecret:
+      secretKeys:
+        ## @param identityKeycloak.postgresql.auth.secretKeys.adminPasswordKey defines the key within the existing secret object for PostgreSQL admin.
+        adminPasswordKey: "postgres-password"
+        ## @param identityKeycloak.postgresql.auth.secretKeys.userPasswordKey defines the key within the existing secret object for PostgreSQL user.
+        userPasswordKey: "password"
     primary:
       ## @param identityKeycloak.postgresql.primary.containerSecurityContext.enabled
       ## @param identityKeycloak.postgresql.primary.containerSecurityContext.privileged
@@ -2364,48 +2647,9 @@ identityKeycloak:
   extraVolumes:
   - name: data-tmp
     emptyDir: {}
-  - name: camunda-theme
-    emptyDir:
-      sizeLimit: 10Mi
-
-  initContainers:
-  ## @param identityKeycloak.initContainers[0].name
-  ## @param identityKeycloak.initContainers[0].image
-  ## @param identityKeycloak.initContainers[0].imagePullPolicy
-  ## @param identityKeycloak.initContainers[0].command
-  ## @param identityKeycloak.initContainers[0].securityContext.privileged
-  ## @param identityKeycloak.initContainers[0].securityContext.readOnlyRootFilesystem
-  ## @param identityKeycloak.initContainers[0].securityContext.allowPrivilegeEscalation
-  ## @param identityKeycloak.initContainers[0].securityContext.runAsNonRoot
-  ## @param identityKeycloak.initContainers[0].securityContext.runAsUser
-  ## @param identityKeycloak.initContainers[0].securityContext.capabilities.drop
-  ## @param identityKeycloak.initContainers[0].securityContext.seccompProfile.type
-  ## @param identityKeycloak.initContainers[0].volumeMounts[0].name
-  ## @param identityKeycloak.initContainers[0].volumeMounts[0].mountPath
-  - name: copy-camunda-theme
-    image: "{{ .Values.global.identity.image.registry }}/{{ .Values.global.identity.image.repository }}:{{ .Values.global.identity.image.tag }}"
-    imagePullPolicy: "{{ .Values.global.identity.image.pullPolicy | default \"Always\" }}"
-    command: ["sh", "-c", "cp -a /app/keycloak-theme/* /mnt"]
-    securityContext:
-      privileged: false
-      readOnlyRootFilesystem: true
-      allowPrivilegeEscalation: false
-      runAsNonRoot: true
-      runAsUser: 1001
-      capabilities:
-        drop: ["ALL"]
-      seccompProfile:
-        type: RuntimeDefault
-    volumeMounts:
-    - name: camunda-theme
-      mountPath: /mnt
   ## @param identityKeycloak.extraVolumeMounts[0].name
   ## @param identityKeycloak.extraVolumeMounts[0].mountPath
-  ## @param identityKeycloak.extraVolumeMounts[1].mountPath
-  ## @param identityKeycloak.extraVolumeMounts[1].name
   extraVolumeMounts:
-  - name: camunda-theme
-    mountPath: /opt/bitnami/keycloak/themes/identity
   - name: data-tmp
     mountPath: /opt/bitnami/keycloak/data/tmp
 
@@ -2482,6 +2726,7 @@ identityKeycloak:
     ## @param identityKeycloak.auth.passwordSecretKey defines the key within the existing secret object.
     passwordSecretKey: "admin-password"
 
+
 #######################################################################
 #     #               #     #
 #  #  # ###### #####  ##   ##  ####  #####  ###### #      ###### #####
@@ -2503,22 +2748,13 @@ webModeler:
   nameOverride: ""
 
   ## @extra webModeler.image configuration of the WebModeler Docker images
-  # Camunda Enterprise repository.
-  # registry.camunda.cloud/web-modeler-ee
   image:
     ## @param webModeler.image.registry can be used to set the Docker registry for the WebModeler images (overwrites global.image.registry)
-    # Note: The images are not publicly available on Docker Hub, but only from Camunda's private registry.
-    registry: registry.camunda.cloud
+    registry: ""
     ## @param webModeler.image.tag can be used to set the Docker image tag for the WebModeler images (overwrites global.image.tag)
-    # renovate: datasource=docker depName=camunda/web-modeler lookupName=registry.camunda.cloud/web-modeler-ee/modeler-restapi
-    tag: 8.5.9
+    # renovate: datasource=docker depName=camunda/web-modeler-restapi
+    tag: 8.6.0-alpha5
     ## @param webModeler.image.pullSecrets can be used to configure image pull secrets, see https://kubernetes.io/docs/concepts/containers/images/#specifying-imagepullsecrets-on-a-pod
-    # Note: A secret will be required, if the WebModeler images are pulled directly from Camunda's private registry.
-    #
-    # Example:
-    #
-    # pullSecrets:
-    #   - name: registry-secret
     pullSecrets: []
 
   # Note: The WebSocket application will be exposed on the configured path suffixed with "-ws", e.g. "/modeler-ws"
@@ -2540,7 +2776,7 @@ webModeler:
     ## @extra webModeler.restapi.image configuration of the restapi Docker image
     image:
       ## @param webModeler.restapi.image.repository defines which image repository to use for the restapi Docker image
-      repository: web-modeler-ee/modeler-restapi
+      repository: camunda/web-modeler-restapi
 
     ## @param webModeler.restapi.sidecars can be used to attach extra containers to the restapi deployment
     sidecars: []
@@ -2559,7 +2795,7 @@ webModeler:
       ## @param webModeler.restapi.externalDatabase.existingSecret can be used to provide the name of an existing secret resource containing the database password
       existingSecret:
       ## @param webModeler.restapi.externalDatabase.existingSecretPasswordKey can be used to provide the name of an existing secret key containing the database password
-      existingSecretPasswordKey: ""
+      existingSecretPasswordKey: "database-password"
 
     ## @extra webModeler.restapi.mail configuration for emails sent by WebModeler
     mail:
@@ -2576,7 +2812,7 @@ webModeler:
       ## @param webModeler.restapi.mail.existingSecret can be used to provide the name of an existing secret resource containing the SMTP password
       existingSecret:
       ## @param webModeler.restapi.mail.existingSecretPasswordKey can be used to provide the name of an existing secret key containing the SMTP password
-      existingSecretPasswordKey: ""
+      existingSecretPasswordKey: "smtp-password"
       ## @param webModeler.restapi.mail.fromAddress defines the email address that will be displayed as the sender of emails sent by WebModeler
       # NOTE: This value is mandatory.
       fromAddress: ""
@@ -2726,7 +2962,7 @@ webModeler:
     ## @param webModeler.restapi.dnsPolicy https://kubernetes.io/docs/concepts/services-networking/dns-pod-service/#pod-s-dns-policy
     dnsPolicy: ""
     ## @param webModeler.restapi.dnsConfig https://kubernetes.io/docs/concepts/services-networking/dns-pod-service/#pod-dns-config
-    dnsConfig: {}
+    dnsConfig: { }
 
   # WebModeler.
   #    # ###### #####    ##   #####  #####
@@ -2741,7 +2977,7 @@ webModeler:
     ## @extra webModeler.webapp.image configuration of the webapp Docker image
     image:
       ## @param webModeler.webapp.image.repository defines which image repository to use for the webapp Docker image
-      repository: web-modeler-ee/modeler-webapp
+      repository: camunda/web-modeler-webapp
 
     ## @param webModeler.webapp.sidecars can be used to attach extra containers to the modeler webapp deployment
     sidecars: []
@@ -2906,7 +3142,7 @@ webModeler:
     ## @extra webModeler.websockets.image configuration of the websockets Docker image
     image:
       ## @param webModeler.websockets.image.repository defines which image repository to use for the websockets Docker image
-      repository: web-modeler-ee/modeler-websockets
+      repository: camunda/web-modeler-websockets
 
     ## @param webModeler.websockets.sidecars can be used to attach extra containers to the modeler websockets deployment
     sidecars: []
@@ -2969,10 +3205,6 @@ webModeler:
     startupProbe:
       ## @param webModeler.websockets.startupProbe.enabled if true, the startup probe will be enabled for the websockets container
       enabled: false
-      ## @param webModeler.websockets.startupProbe.scheme defines the startup probe schema used on calling the probePath
-      scheme: HTTP
-      ## @param webModeler.websockets.startupProbe.probePath defines the HTTP endpoint used for the liveness probe
-      probePath: /up
       ## @param webModeler.websockets.startupProbe.initialDelaySeconds defines the number of seconds after the container has started before the probe is initiated
       initialDelaySeconds: 10
       ## @param webModeler.websockets.startupProbe.periodSeconds defines how often the probe is executed
@@ -2988,10 +3220,6 @@ webModeler:
     readinessProbe:
       ## @param webModeler.websockets.readinessProbe.enabled if true, the readiness probe will be enabled for the websockets container
       enabled: true
-      ## @param webModeler.websockets.readinessProbe.scheme defines the startup probe schema used on calling the probePath
-      scheme: HTTP
-      ## @param webModeler.websockets.readinessProbe.probePath defines the HTTP endpoint used for the liveness probe
-      probePath: /up
       ## @param webModeler.websockets.readinessProbe.initialDelaySeconds defines the number of seconds after the container has started before the probe is initiated
       initialDelaySeconds: 10
       ## @param webModeler.websockets.readinessProbe.periodSeconds defines how often the probe is executed
@@ -3007,10 +3235,6 @@ webModeler:
     livenessProbe:
       ## @param webModeler.websockets.livenessProbe.enabled if true, the liveness probe will be enabled for the websockets container
       enabled: false
-      ## @param webModeler.websockets.livenessProbe.scheme defines the startup probe schema used on calling the probePath
-      scheme: HTTP
-      ## @param webModeler.websockets.livenessProbe.probePath defines the HTTP endpoint used for the liveness probe
-      probePath: /up
       ## @param webModeler.websockets.livenessProbe.initialDelaySeconds defines the number of seconds after the container has started before the probe is initiated
       initialDelaySeconds: 10
       ## @param webModeler.websockets.livenessProbe.periodSeconds defines how often the probe is executed
@@ -3071,7 +3295,7 @@ webModeler:
     automountServiceAccountToken: false
 
   ingress:
-    ## @param webModeler.ingress.enabled if true, an Ingress resource will be deployed with the WebModeler deployment. Only useful if an Ingress controller like NGINX is available.
+    ## @param webModeler.ingress.enabled if true, an Ingress resource will be deployed with the WebModeler deployment. Only useful if an Ingress controller like NGINX is available. Warning, separated ingress is deprecated and will be removed in the next release, please use global.ingress instead.
     enabled: false
     ## @param webModeler.ingress.className defines the class or configuration of ingress which should be used by the controller
     className: nginx
@@ -3124,6 +3348,17 @@ postgresql:
   ## @param postgresql.enabled if true, a PostgreSQL database will be deployed as part of the Helm release by using the dependency chart
   # Note: If WebModeler is enabled, and WebModeler Postgresql is disabled, the external database configuration must be set under "webModeler.restapi.externalDatabase".
   enabled: false
+  ## @extra postgresql.global.compatibility Compatibility adaptations for Kubernetes platforms
+  global:
+    ## Compatibility adaptations for Kubernetes platforms
+    ##
+    compatibility:
+      ## Compatibility adaptations for Openshift
+      ##
+      openshift:
+        ## @param postgresql.global.compatibility.openshift.adaptSecurityContext Adapt the securityContext sections of the deployment to make them compatible with Openshift restricted-v2 SCC: remove runAsUser, runAsGroup and fsGroup and let the platform use their allowed default IDs. Possible values: force (perform the adaptation always), disabled (do not perform adaptation)
+        ##
+        adaptSecurityContext: "{{ .Values.global.compatibility.openshift.adaptSecurityContext | default \"disabled\" }}"
   ## @param postgresql.nameOverride defines the name of the Postgres resources (names will be prefixed with the release name), see https://github.com/bitnami/charts/tree/main/bitnami/postgresql#common-parameters
   # Note: Don't use "postgresql" which is already used for Keycloak's database.
   nameOverride: postgresql-web-modeler
@@ -3143,42 +3378,21 @@ postgresql:
     database: web-modeler
     ## @param postgresql.auth.existingSecret can be used to provide the name of an existing secret resource containing the database password
     existingSecret: ""
+    secretKeys:
+      ## @param postgresql.auth.secretKeys.adminPasswordKey defines the key within the existing secret object for PostgreSQL admin.
+      adminPasswordKey: "postgres-password"
+      ## @param postgresql.auth.secretKeys.userPasswordKey defines the key within the existing secret object for PostgreSQL user.
+      userPasswordKey: "password"
 
+  ## @param postgresql.primary.containerSecurityContext.enabled
+  ## @param postgresql.primary.containerSecurityContext.allowPrivilegeEscalation
+  ## @param postgresql.primary.containerSecurityContext.privileged
+  ## @param postgresql.primary.containerSecurityContext.readOnlyRootFilesystem
+  ## @param postgresql.primary.containerSecurityContext.runAsNonRoot
+  ## @param postgresql.primary.containerSecurityContext.runAsUser
+  ## @param postgresql.primary.containerSecurityContext.capabilities.drop
+  ## @param postgresql.primary.containerSecurityContext.seccompProfile.type
   primary:
-    ## @param postgresql.primary.extraVolumes[0].name
-    ## @param postgresql.primary.extraVolumes[0].emptyDir
-    ## @param postgresql.primary.extraVolumes[1].name
-    ## @param postgresql.primary.extraVolumes[1].emptyDir
-    ## @param postgresql.primary.extraVolumes[2].name
-    ## @param postgresql.primary.extraVolumes[2].emptyDir
-    extraVolumes:
-    - name: tmp
-      emptyDir: {}
-    - name: config
-      emptyDir: {}
-    - name: postgresql-tmp
-      emptyDir: {}
-    ## @param postgresql.primary.extraVolumeMounts[0].mountPath
-    ## @param postgresql.primary.extraVolumeMounts[0].name
-    ## @param postgresql.primary.extraVolumeMounts[1].mountPath
-    ## @param postgresql.primary.extraVolumeMounts[1].name
-    ## @param postgresql.primary.extraVolumeMounts[2].mountPath
-    ## @param postgresql.primary.extraVolumeMounts[2].name
-    extraVolumeMounts:
-    - mountPath: /tmp
-      name: tmp
-    - mountPath: /opt/bitnami/postgresql/conf
-      name: config
-    - mountPath: /opt/bitnami/postgresql/tmp
-      name: postgresql-tmp
-    ## @param postgresql.primary.containerSecurityContext.enabled
-    ## @param postgresql.primary.containerSecurityContext.privileged
-    ## @param postgresql.primary.containerSecurityContext.readOnlyRootFilesystem
-    ## @param postgresql.primary.containerSecurityContext.allowPrivilegeEscalation
-    ## @param postgresql.primary.containerSecurityContext.runAsNonRoot
-    ## @param postgresql.primary.containerSecurityContext.runAsUser
-    ## @param postgresql.primary.containerSecurityContext.capabilities.drop
-    ## @param postgresql.primary.containerSecurityContext.seccompProfile.type
     containerSecurityContext:
       enabled: true
       allowPrivilegeEscalation: false
@@ -3232,7 +3446,7 @@ connectors:
     ## @param connectors.image.repository defines which image repository to use
     repository: camunda/connectors-bundle
     ## @param connectors.image.tag can be set to overwrite the global tag, which should be used in that chart
-    tag: 8.5.9
+    tag: 8.6.0-alpha5
     ## @param connectors.image.pullSecrets can be used to configure image pull secrets https://kubernetes.io/docs/concepts/containers/images/#specifying-imagepullsecrets-on-a-pod
     pullSecrets: []
 
@@ -3370,7 +3584,7 @@ connectors:
     automountServiceAccountToken: false
 
   ingress:
-    ## @param connectors.ingress.enabled if true, an ingress resource is deployed with the Connectors deployment. Only useful if an ingress controller is available, like nginx.
+    ## @param connectors.ingress.enabled if true, an ingress resource is deployed with the Connectors deployment. Only useful if an ingress controller is available, like nginx. Warning, separated ingress is deprecated and will be removed in the next release, please use global.ingress instead.
     enabled: false
     ## @param connectors.ingress.className defines the class or configuration of ingress which should be used by the controller
     className: nginx
@@ -3456,13 +3670,28 @@ connectors:
 elasticsearch:
   ## @param elasticsearch.enabled
   enabled: true
+  ## @extra elasticsearch.global.compatibility Compatibility adaptations for Kubernetes platforms
+  global:
+    ## Compatibility adaptations for Kubernetes platforms
+    ##
+    compatibility:
+      ## Compatibility adaptations for Openshift
+      ##
+      openshift:
+        ## @param elasticsearch.global.compatibility.openshift.adaptSecurityContext Adapt the securityContext sections of the deployment to make them compatible with Openshift restricted-v2 SCC: remove runAsUser, runAsGroup and fsGroup and let the platform use their allowed default IDs. Possible values: force (perform the adaptation always), disabled (do not perform adaptation)
+        ##
+        adaptSecurityContext: "{{ .Values.global.compatibility.openshift.adaptSecurityContext | default \"disabled\" }}"
   # https://hub.docker.com/r/bitnami/elasticsearch/tags
   image:
     ## @param elasticsearch.image.repository
     repository: bitnami/elasticsearch
     ## @param elasticsearch.image.tag
-    tag: 8.12.2
+    tag: 8.15.2
   master:
+    ## @param elasticsearch.master.replicaCount defines number of master-elegible replicas to deploy
+    replicaCount: 3
+    ## @param elasticsearch.master.podAntiAffinityPreset defines Pod anti-affinity preset. Ignored if master.affinity is set
+    podAntiAffinityPreset: hard
     containerSecurityContext:
     ## @param elasticsearch.master.containerSecurityContext.readOnlyRootFilesystem
       readOnlyRootFilesystem: true

@@ -41,7 +41,7 @@ spec:
         []
       containers:
         - name: web-modeler-restapi
-          image: "registry.camunda.cloud/web-modeler-ee/modeler-restapi:8.5.9"
+          image: "camunda/web-modeler-restapi:8.6.0-alpha5"
           imagePullPolicy: IfNotPresent
           securityContext:
             allowPrivilegeEscalation: false
@@ -52,6 +52,11 @@ spec:
             seccompProfile:
               type: RuntimeDefault
           env:
+            - name: CAMUNDA_LICENSE_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: camunda-platform-test-license
+                  key: CAMUNDA_LICENSE_KEY
             - name: JAVA_OPTIONS
               value: "-XX:MaxRAMPercentage=80.0"
             - name: SPRING_DATASOURCE_PASSWORD
@@ -93,7 +98,6 @@ spec:
           readinessProbe:
             httpGet:
               path: /health/readiness
-              scheme: HTTP
               port: http-management
             initialDelaySeconds: 30
             periodSeconds: 30

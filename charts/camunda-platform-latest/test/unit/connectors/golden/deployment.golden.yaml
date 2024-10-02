@@ -11,13 +11,13 @@ metadata:
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: camunda-platform
     app.kubernetes.io/component: connectors
-    app.kubernetes.io/version: "8.5.9"
+    app.kubernetes.io/version: "8.6.0-alpha5"
   annotations:
     {}
 spec:
+  replicas: 1
   strategy:
     type: RollingUpdate
-  replicas: 1
   selector:
     matchLabels:
       app: camunda-platform
@@ -35,7 +35,7 @@ spec:
         app.kubernetes.io/managed-by: Helm
         app.kubernetes.io/part-of: camunda-platform
         app.kubernetes.io/component: connectors
-        app.kubernetes.io/version: "8.5.9"
+        app.kubernetes.io/version: "8.6.0-alpha5"
       annotations:
     spec:
       imagePullSecrets:
@@ -44,7 +44,7 @@ spec:
         []
       containers:
         - name: connectors
-          image: camunda/connectors-bundle:8.5.9
+          image: camunda/connectors-bundle:8.6.0-alpha5
           imagePullPolicy: IfNotPresent
           securityContext:
             allowPrivilegeEscalation: false
@@ -59,6 +59,11 @@ spec:
               name: http
               protocol: TCP
           env:
+            - name: CAMUNDA_LICENSE_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: camunda-platform-test-license
+                  key: CAMUNDA_LICENSE_KEY
             - name: CAMUNDA_IDENTITY_CLIENT_SECRET
               valueFrom:
                 secretKeyRef:

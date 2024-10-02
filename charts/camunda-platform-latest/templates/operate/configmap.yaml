@@ -7,15 +7,19 @@ metadata:
     {{- include "operate.labels" . | nindent 4 }}
 data:
   {{- if .Values.operate.configuration }}
-  application.yml: |
+  application.yaml: |
     {{ .Values.operate.configuration | indent 4 | trim }}
   {{- else }}
-  application.yml: |
+  application.yaml: |
     {{- if .Values.operate.contextPath }}
     server:
       servlet:
         context-path: {{ .Values.operate.contextPath | quote }}
+    management:
+      server:
+        base-path: {{ .Values.operate.contextPath | quote }}
     {{- end }}
+
     {{- if .Values.global.identity.auth.enabled }}
     spring:
       profiles:
@@ -31,13 +35,33 @@ data:
       identity:
         clientId: {{ include "operate.authClientId" . | quote }}
         audience: {{ include "operate.authAudience" . | quote }}
-        baseUrl: {{ include "camundaPlatform.identityURL" . | quote }}
     {{- else }}
     spring:
       profiles:
         active: "auth"
     {{- end }}
-    
+
+    # Camunda Database configuration
+    {{- if .Values.global.elasticsearch.enabled }}
+    camunda.database:
+      type: elasticsearch
+      # Cluster name
+      clusterName: {{ .Values.global.elasticsearch.clusterName }}
+      {{- if .Values.global.elasticsearch.external }}
+      username: {{ .Values.global.elasticsearch.auth.username | quote }}
+      {{- end }}
+      # Elasticsearch full url
+      url: {{ include "camundaPlatform.elasticsearchURL" . | quote }}
+    {{- end }}
+    {{- if .Values.global.opensearch.enabled }}
+    camunda.database:
+      type: opensearch
+      url: {{ include "camundaPlatform.opensearchURL" . | quote }}
+      {{- if .Values.global.opensearch.auth.username }}
+      username: {{ .Values.global.opensearch.auth.username | quote }}
+      {{- end }}
+    {{- end }}
+
     # Operate configuration file
     camunda.operate:
       {{- if .Values.global.opensearch.enabled }}
@@ -89,8 +113,8 @@ data:
       {{- end }}
       # Zeebe instance
       zeebe:
-        # Broker contact point
-        brokerContactPoint: "{{ tpl .Values.global.zeebeClusterName . }}-gateway:{{ .Values.zeebeGateway.service.grpcPort }}"
+        # Gateway address
+        gatewayAddress: "{{ tpl .Values.global.zeebeClusterName . }}-gateway:{{ .Values.zeebeGateway.service.grpcPort }}"
       {{- if .Values.global.opensearch.enabled }}
       opensearch:
         url: {{ include "camundaPlatform.opensearchURL" . | quote }}

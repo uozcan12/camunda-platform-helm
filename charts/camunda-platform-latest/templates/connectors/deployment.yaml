@@ -6,9 +6,9 @@ metadata:
   labels: {{- include "connectors.labels" . | nindent 4 }}
   annotations: {{- toYaml .Values.global.annotations | nindent 4 }}
 spec:
+  replicas: {{ .Values.connectors.replicas }}
   strategy:
     type: RollingUpdate
-  replicas: {{ .Values.connectors.replicas }}
   selector:
     matchLabels: {{- include "connectors.matchLabels" . | nindent 6 }}
   template:
@@ -32,13 +32,18 @@ spec:
           image: {{ include "camundaPlatform.imageByParams" (dict "base" .Values.global "overlay" .Values.connectors) }}
           imagePullPolicy: {{ .Values.global.image.pullPolicy }}
           {{- if .Values.connectors.containerSecurityContext }}
-          securityContext: {{- toYaml .Values.connectors.containerSecurityContext | nindent 12 }}
+          securityContext: {{- include "common.compatibility.renderSecurityContext" (dict "secContext" $.Values.connectors.containerSecurityContext "context" $) | nindent 12 }}
           {{- end }}
           ports:
             - containerPort: {{ .Values.connectors.service.serverPort }}
               name: {{ .Values.connectors.service.serverName }}
               protocol: TCP
           env:
+            - name: CAMUNDA_LICENSE_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "camundaPlatform.licenseSecretName" . }}
+                  key: {{ include "camundaPlatform.licenseSecretKey" . }}
           {{- if eq .Values.connectors.inbound.mode "credentials" }}
             - name: CAMUNDA_OPERATE_CLIENT_PASSWORD
               valueFrom:
@@ -167,7 +172,7 @@ spec:
       dnsPolicy: {{ .Values.connectors.dnsPolicy | quote }}
       {{- end }}
       {{- if .Values.connectors.podSecurityContext }}
-      securityContext: {{- toYaml .Values.connectors.podSecurityContext | nindent 8 }}
+      securityContext: {{- include "common.compatibility.renderSecurityContext" (dict "secContext" $.Values.connectors.podSecurityContext "context" $) | nindent 8 }}
       {{- end }}
       {{- with .Values.connectors.nodeSelector }}
       nodeSelector:

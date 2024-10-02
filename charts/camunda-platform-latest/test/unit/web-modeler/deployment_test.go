@@ -265,7 +265,7 @@ func (s *deploymentTemplateTest) TestContainerOverwriteImageTag() {
 	helm.UnmarshalK8SYaml(s.T(), output, &deployment)
 
 	// then
-	expectedContainerImage := "registry.camunda.cloud/web-modeler-ee/modeler-" + s.component + ":a.b.c"
+	expectedContainerImage := "camunda/web-modeler-" + s.component + ":a.b.c"
 	containers := deployment.Spec.Template.Spec.Containers
 	s.Require().Equal(1, len(containers))
 	s.Require().Equal(expectedContainerImage, containers[0].Image)
@@ -289,7 +289,7 @@ func (s *deploymentTemplateTest) TestContainerOverwriteGlobalImageTag() {
 	helm.UnmarshalK8SYaml(s.T(), output, &deployment)
 
 	// then
-	expectedContainerImage := "registry.camunda.cloud/web-modeler-ee/modeler-" + s.component + ":a.b.c"
+	expectedContainerImage := "camunda/web-modeler-" + s.component + ":a.b.c"
 	containers := deployment.Spec.Template.Spec.Containers
 	s.Require().Equal(1, len(containers))
 	s.Require().Equal(expectedContainerImage, containers[0].Image)
@@ -313,7 +313,7 @@ func (s *deploymentTemplateTest) TestContainerOverwriteImageTagWithChartDirectSe
 	helm.UnmarshalK8SYaml(s.T(), output, &deployment)
 
 	// then
-	expectedContainerImage := "registry.camunda.cloud/web-modeler-ee/modeler-" + s.component + ":a.b.c"
+	expectedContainerImage := "camunda/web-modeler-" + s.component + ":a.b.c"
 	containers := deployment.Spec.Template.Spec.Containers
 	s.Require().Equal(1, len(containers))
 	s.Require().Equal(expectedContainerImage, containers[0].Image)
@@ -473,7 +473,6 @@ func (s *deploymentTemplateTest) TestContainerSetSecurityContext() {
 			"webModeler.enabled":                                                          "true",
 			"webModeler.restapi.mail.fromAddress":                                         "example@example.com",
 			"webModeler." + s.component + ".containerSecurityContext.privileged":          "true",
-			"webModeler." + s.component + ".containerSecurityContext.capabilities.add[0]": "NET_ADMIN",
 		},
 		KubectlOptions: k8s.NewKubectlOptions("", "", s.namespace),
 	}
@@ -486,7 +485,6 @@ func (s *deploymentTemplateTest) TestContainerSetSecurityContext() {
 	// then
 	securityContext := deployment.Spec.Template.Spec.Containers[0].SecurityContext
 	s.Require().True(*securityContext.Privileged)
-	s.Require().EqualValues("NET_ADMIN", securityContext.Capabilities.Add[0])
 }
 
 // https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#nodeselector

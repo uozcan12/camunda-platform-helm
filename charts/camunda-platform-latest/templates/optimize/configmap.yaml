@@ -63,8 +63,6 @@ data:
         audience: {{ include "optimize.authAudience" . | quote }}
         issuer: {{ include "camundaPlatform.authIssuerUrl" . | quote }}
         issuerBackendUrl: {{ include "camundaPlatform.authIssuerBackendUrl" . | quote }}
-        baseUrl: {{ include "camundaPlatform.identityURL" . | quote }}
-
   {{- end }}
 
   {{- range $key, $val := .Values.optimize.extraConfiguration }}

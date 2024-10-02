@@ -437,8 +437,7 @@ func (s *deploymentTemplateTest) TestContainerSetSecurityContext() {
 	// given
 	options := &helm.Options{
 		SetValues: map[string]string{
-			"zeebeGateway.containerSecurityContext.privileged":          "true",
-			"zeebeGateway.containerSecurityContext.capabilities.add[0]": "NET_ADMIN",
+			"zeebeGateway.containerSecurityContext.privileged": "true",
 		},
 		KubectlOptions: k8s.NewKubectlOptions("", "", s.namespace),
 	}
@@ -451,7 +450,6 @@ func (s *deploymentTemplateTest) TestContainerSetSecurityContext() {
 	// then
 	securityContext := deployment.Spec.Template.Spec.Containers[0].SecurityContext
 	s.Require().True(*securityContext.Privileged)
-	s.Require().EqualValues("NET_ADMIN", securityContext.Capabilities.Add[0])
 }
 
 func (s *deploymentTemplateTest) TestContainerSetServiceAccountName() {

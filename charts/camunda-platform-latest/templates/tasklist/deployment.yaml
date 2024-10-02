@@ -36,9 +36,14 @@ spec:
           image: {{ include "camundaPlatform.imageByParams" (dict "base" .Values.global "overlay" .Values.tasklist) }}
           imagePullPolicy: {{ .Values.global.image.pullPolicy }}
           {{- if .Values.tasklist.containerSecurityContext }}
-          securityContext: {{- toYaml .Values.tasklist.containerSecurityContext | nindent 12 }}
+          securityContext: {{- include "common.compatibility.renderSecurityContext" (dict "secContext" $.Values.tasklist.containerSecurityContext "context" $) | nindent 12 }}
           {{- end }}
           env:
+            - name: CAMUNDA_LICENSE_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "camundaPlatform.licenseSecretName" . }}
+                  key: {{ include "camundaPlatform.licenseSecretKey" . }}
             {{- if .Values.tasklist.contextPath }}
             - name: SERVER_SERVLET_CONTEXT_PATH
               value: {{ .Values.tasklist.contextPath | quote }}
@@ -54,6 +59,11 @@ spec:
                 secretKeyRef:
                   name: {{ include "elasticsearch.authExistingSecret" . | quote }}
                   key: {{ include "elasticsearch.authExistingSecretKey" . | quote }}
+            - name: CAMUNDA_DATABASE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "elasticsearch.authExistingSecret" . | quote }}
+                  key: {{ include "elasticsearch.authExistingSecretKey" . | quote }}
             {{- end }}
             {{- if and .Values.global.opensearch.enabled (or .Values.global.opensearch.auth.existingSecret .Values.global.opensearch.auth.password) }}
             - name: CAMUNDA_TASKLIST_OPENSEARCH_PASSWORD
@@ -62,6 +72,11 @@ spec:
                   name: {{ include "opensearch.authExistingSecret" . | quote }}
                   key: {{ include "opensearch.authExistingSecretKey" . | quote }}
             - name: CAMUNDA_TASKLIST_ZEEBEOPENSEARCH_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "opensearch.authExistingSecret" . | quote }}
+                  key: {{ include "opensearch.authExistingSecretKey" . | quote }}
+            - name: CAMUNDA_DATABASE_PASSWORD
               valueFrom:
                 secretKeyRef:
                   name: {{ include "opensearch.authExistingSecret" . | quote }}
@@ -116,6 +131,28 @@ spec:
             - name: ZEEBE_CLIENT_CONFIG_PATH
               value: /tmp/zeebe_auth_cache
             {{- end }}
+            # the host name of Operate that is used when connecting with the Zeebe cluster
+            # via atomix-cluster (SWIM)
+            - name: ZEEBE_GATEWAY_CLUSTER_HOST
+              valueFrom:
+                fieldRef:
+                  apiVersion: v1
+                  fieldPath: status.podIP
+            # the unique member id (in this case the pod name) that is used as identifier inside the SWIM cluster
+            - name: ZEEBE_GATEWAY_CLUSTER_MEMBERID
+              valueFrom:
+                fieldRef:
+                  apiVersion: v1
+                  fieldPath: metadata.name
+            # the name of the atomix cluster (SWIM) to connect to (must be the same as for the Zeebe cluster)
+            - name: ZEEBE_GATEWAY_CLUSTER_CLUSTERNAME
+              value: {{ tpl .Values.global.zeebeClusterName . }}
+            # the port the service expects requests/messages from the atomix cluster (must be exposed internally)
+            - name: ZEEBE_GATEWAY_CLUSTER_PORT
+              value: {{ .Values.tasklist.service.internalPort | quote }}
+            # the initial contact point to join the SWIM (atomix) cluster
+            - name: ZEEBE_GATEWAY_CLUSTER_INITIALCONTACTPOINTS
+              value: {{ tpl .Values.global.zeebeClusterName . }}:{{ .Values.zeebeGateway.service.internalPort }}
             {{- with .Values.tasklist.env }}
               {{- tpl (toYaml .) $ | nindent 12 }}
             {{- end }}
@@ -136,12 +173,17 @@ spec:
             - containerPort: 8080
               name: http
               protocol: TCP
+            - containerPort: 9600
+              name: management
+            - containerPort: {{ .Values.tasklist.service.internalPort }}
+              name: {{ .Values.tasklist.service.internalName }}
+              protocol: TCP
           {{- if .Values.tasklist.startupProbe.enabled }}
           startupProbe:
             httpGet:
               path: {{ .Values.tasklist.contextPath }}{{ .Values.tasklist.startupProbe.probePath }}
               scheme: {{ .Values.tasklist.startupProbe.scheme }}
-              port: http
+              port: management
             initialDelaySeconds: {{ .Values.tasklist.startupProbe.initialDelaySeconds }}
             periodSeconds: {{ .Values.tasklist.startupProbe.periodSeconds }}
             successThreshold: {{ .Values.tasklist.startupProbe.successThreshold }}
@@ -153,7 +195,7 @@ spec:
             httpGet:
               path: {{ .Values.tasklist.contextPath }}{{ .Values.tasklist.readinessProbe.probePath }}
               scheme: {{ .Values.tasklist.readinessProbe.scheme }}
-              port: http
+              port: management
             initialDelaySeconds: {{ .Values.tasklist.readinessProbe.initialDelaySeconds }}
             periodSeconds: {{ .Values.tasklist.readinessProbe.periodSeconds }}
             successThreshold: {{ .Values.tasklist.readinessProbe.successThreshold }}
@@ -165,7 +207,7 @@ spec:
             httpGet:
               path: {{ .Values.tasklist.contextPath }}{{ .Values.tasklist.livenessProbe.probePath }}
               scheme: {{ .Values.tasklist.livenessProbe.scheme }}
-              port: http
+              port: management
             initialDelaySeconds: {{ .Values.tasklist.livenessProbe.initialDelaySeconds }}
             periodSeconds: {{ .Values.tasklist.livenessProbe.periodSeconds }}
             successThreshold: {{ .Values.tasklist.livenessProbe.successThreshold }}
@@ -174,11 +216,8 @@ spec:
           {{- end }}
           volumeMounts:
             - name: config
-              mountPath: /app/resources/application.yml
-              subPath: application.yml
-            - name: config
-              mountPath: /usr/local/tasklist/config/application.yml
-              subPath: application.yml
+              mountPath: /usr/local/tasklist/config/application.yaml
+              subPath: application.yaml
             - mountPath: /tmp
               name: tmp
             - mountPath: /camunda
@@ -231,7 +270,7 @@ spec:
       dnsPolicy: {{ .Values.tasklist.dnsPolicy | quote }}
       {{- end }}
       {{- if .Values.tasklist.podSecurityContext }}
-      securityContext: {{- toYaml .Values.tasklist.podSecurityContext | nindent 8 }}
+      securityContext: {{- include "common.compatibility.renderSecurityContext" (dict "secContext" $.Values.tasklist.podSecurityContext "context" $) | nindent 8 }}
       {{- end }}
 {{- with .Values.tasklist.nodeSelector }}
       nodeSelector:

@@ -10,8 +10,14 @@
   "packages": {
     "charts/camunda-platform-latest": {
       "release-type": "helm",
-      "extra-label": "version/8.5,automation/release-please,release/pr,kind/chore,chart/camunda-platform",
+      "extra-label": "version/8.6,automation/release-please,release/pr,kind/chore,chart/camunda-platform",
       "component": "camunda-platform-latest",
+      "include-v-in-tag": false
+    },
+    "charts/camunda-platform-8.5": {
+      "release-type": "helm",
+      "extra-label": "version/8.5,automation/release-please,release/pr,kind/chore,chart/camunda-platform",
+      "component": "camunda-platform-8.5",
       "include-v-in-tag": false
     },
     "charts/camunda-platform-8.4": {

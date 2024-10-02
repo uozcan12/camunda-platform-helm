@@ -48,9 +48,14 @@ spec:
           image: {{ include "camundaPlatform.imageByParams" (dict "base" .Values.global "overlay" .Values.zeebe) }}
           imagePullPolicy: {{ .Values.global.image.pullPolicy }}
           {{- if .Values.zeebe.containerSecurityContext }}
-          securityContext: {{- toYaml .Values.zeebe.containerSecurityContext | nindent 12 }}
+          securityContext: {{- include "common.compatibility.renderSecurityContext" (dict "secContext" $.Values.zeebe.containerSecurityContext "context" $) | nindent 12 }}
           {{- end }}
           env:
+            - name: CAMUNDA_LICENSE_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "camundaPlatform.licenseSecretName" . }}
+                  key: {{ include "camundaPlatform.licenseSecretKey" . }}
             - name: LC_ALL
               value: C.UTF-8
             - name: K8S_NAME
@@ -72,7 +77,7 @@ spec:
             - name: ZEEBE_BROKER_CLUSTER_INITIALCONTACTPOINTS
               value:
               {{- range (untilStep 0 (int .Values.zeebe.clusterSize) 1) }}
-                $(K8S_SERVICE_NAME)-{{ . }}.$(K8S_SERVICE_NAME).$(K8S_NAMESPACE).svc:{{$.Values.zeebe.service.internalPort}},
+                $(K8S_SERVICE_NAME)-{{ . }}.$(K8S_SERVICE_NAME):{{$.Values.zeebe.service.internalPort}},
               {{- end }}
             - name: ZEEBE_LOG_LEVEL
               value: {{ .Values.zeebe.logLevel | quote }}
@@ -84,9 +89,19 @@ spec:
                 secretKeyRef:
                   name: {{ include "elasticsearch.authExistingSecret" . | quote }}
                   key: {{ include "elasticsearch.authExistingSecretKey" . | quote }}
+            - name: CAMUNDA_DATABASE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "elasticsearch.authExistingSecret" . | quote }}
+                  key: {{ include "elasticsearch.authExistingSecretKey" . | quote }}
             {{- end }}
             {{- if and .Values.global.opensearch.enabled (or .Values.global.opensearch.auth.existingSecret .Values.global.opensearch.auth.password) }}
             - name: ZEEBE_BROKER_EXPORTERS_OPENSEARCH_ARGS_AUTHENTICATION_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "opensearch.authExistingSecret" . | quote }}
+                  key: {{ include "opensearch.authExistingSecretKey" . | quote }}
+            - name: CAMUNDA_DATABASE_PASSWORD
               valueFrom:
                 secretKeyRef:
                   name: {{ include "opensearch.authExistingSecret" . | quote }}
@@ -239,7 +254,7 @@ spec:
       dnsPolicy: {{ .Values.zeebe.dnsPolicy | quote }}
       {{- end }}
       {{- if .Values.zeebe.podSecurityContext }}
-      securityContext: {{- toYaml .Values.zeebe.podSecurityContext | nindent 8 }}
+      securityContext: {{- include "common.compatibility.renderSecurityContext" (dict "secContext" $.Values.zeebe.podSecurityContext "context" $) | nindent 8 }}
       {{- end }}
 {{- with .Values.zeebe.nodeSelector }}
       nodeSelector:
